@@ -146,7 +146,7 @@ Expressions have the following forms:
   
   This takes the place of Bash's array references; arithmetic
   expressions; and most or all of the fancy ["parameter
-  expansions"][bash-parameter-expansion].
+  expansions"][bashman-3.5.3].
 
 * A *glob pattern*, e.g. `src/*.[ch]`: evaluates to the list of
   matching filenames etc.
