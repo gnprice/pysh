@@ -302,6 +302,7 @@ py {
 }
 ```
 
+
 #### Data Flow Constructs
 
 Pipelines and redirections.  These work much like in Bash.
@@ -323,3 +324,116 @@ aka `[` -- or was that `[[`?  A lot of that is just that `if [ -z
 valuable and need a new or rebuilt home.)*
 
 
+#### Other Important Bits
+
+* Variable definitions/assigments need some thought.
+  `py { foo = bar[baz] }` "works"... but adds up to a lot of friction
+  in the source code crossing the language boundary all the time,
+  unless you really push all but small bits out into Shython.
+
+* Functions.  Pysh syntax for defining them; how they interact when
+  invoked as a command.
+
+* Bytes vs. strings.  I'm not sure Python 3's standard behavior here
+  when it comes to things like filenames and command-line arguments is
+  quite what we want.  There's no question of going back to Python 2...
+  but given how central these are to shell programming, this deserves
+  close attention and perhaps some adjustments.
+
+* Subshells.  Glossed over in some examples above is that in Bash, a
+  command participating in a pipeline runs in a forked process, even
+  if it's entirely within the shell language; while we'd really like
+  such commands to be able to set and mutate data outside it (in
+  lexically-explicit ways, of course.)  How can we define the
+  semantics?  Maybe the key will be something like that we don't make
+  promises about the actual fd 0, 1, and 2, or even `sys.stdin` etc.,
+  because we're handling that data flow in more Python-natural ways.
+
+
+## Interactive Use
+
+Lots of work goes here.  But I'm not sure any fundamental new ideas
+are needed.
+
+
+## Yet-Further Ideas
+
+This section is even more speculative than the rest of this document.
+
+* This design provides two languages nested inside each other: a
+  slightly-modified Python, and a new shell.
+
+  But as Andy Chu often points out, shell programs tend to have a
+  number of different languages intermingled: Bash itself, which
+  comprises a number of language fragments like arithmetic expressions
+  and fancy parameter expansions as well as the "simple command" core;
+  the regexps in `grep` and friends; `sed` or `awk` or `perl`... and a
+  complex CLI like `find` is effectively yet another language, as
+  almost an EDSL.
+
+  And there are some gaps in this Python/shell pair.  They can always
+  be filled with `grep`, `perl`, and the rest the same way they are in
+  Bash... but perhaps we can do better?  One way of looking at what
+  this design attempts to do is to let shell code live inside Python
+  code, and vice versa, in a real parse tree rather than as a string
+  to be re-parsed through multiple layers and require careful
+  escaping.  How about providing that for some kind of regexp
+  match/substitution language?
+
+  Or even somehow for actual Perl?  Though hard to see how that could
+  be done to a similar degree with the Perl not running on the same
+  object model and GC etc.  (Don't think I've heard anything about
+  Parrot in quite a while.)
+
+  Or for `jq`?  Maybe some kind of generic mechanism to assist with
+  integrating any language, at least at a syntactic level even if each
+  command is still entirely a new process.
+
+* Relatedly, maybe a still simpler way to escape into Shython?
+  E.g. `{ ... }` is Shython, while `( ... )` is another Pysh.
+
+
+## Implementation Strategy
+
+For a prototype, Shython programs are translated source-to-source to
+Python.
+
+A modified Python parser finds `sh { ... }` blocks and handles the
+syntax extensions outside them, while a freshly-written parser in a
+handy modern parser framework parses Pysh, in mutual recursion.
+
+*(??? Obviously plenty of uncertainty.  But I'm not thrilled about
+pushing the CPython parser super far into fresh new territory.)*
+
+A Pysh program is handled basically as if by wrapping it in `sh { ... }`.
+
+A slightly fancier implementation might generate Python bytecode
+instead of source.
+
+Still fancier... well, we're not going to beat whatever's the state of
+the art in Python implementations, basically by reduction.
+
+
+## Concerns
+
+Many.  Among them:
+
+* **Startup time.**
+
+  ```
+  $ time python -c pass
+
+  time: 0.027s wall (0.016s u, 0.008s s)
+
+  $ time bash -c :
+
+  time: 0.006s wall (0.000s u, 0.004s s)
+  ```
+
+  (each the median of 3 trials)
+
+  That will escalate if sourcing kLOCs of Pysh library code, let alone
+  importing a bunch of Python dependencies to help with some task.
+
+  That 27ms beats `node` at 59ms (or `ruby`, 78ms); so there's no
+  escape by switching to JavaScript, either.
