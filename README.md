@@ -273,6 +273,11 @@ Several options modify the handling of input and output:
    *(Or maybe this is superfluous because `str.split` is right
    there?)*
 
+   *(Also, this definition means if you use `-a` you get only the list
+   of fields and not the string of the whole line.  With `perl -a`
+   it's pretty common to use both the split and unsplit line, as in
+   `perl -lae 'print $F[0] if (/.../)'`.)*
+
  * With `-j`, the input is parsed as a sequence of JSON values, and
    the block is executed once with `_` set to each value in turn.
    Each resulting value is converted with `json.dump` in place of the
