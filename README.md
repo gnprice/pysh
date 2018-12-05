@@ -255,7 +255,7 @@ Execution happens as follows:
 
    The local `_` is set to the line with its newline removed.  Each
    produced value has a newline appended before printing, except that
-   `None` converts to no output rather than to a blank line.
+   a produced `None` is ignored, as if nothing was produced.
 
  * *(Some analogue / better version of `perl -ne '... END { ... }'`?
    Or maybe you just take that outside the pipeline, enjoying the fact
@@ -288,6 +288,20 @@ Several options modify the handling of input and output:
  * ... *(Surely more.)*
 
 ##### Examples
+
+* Phrasebook entry for `perl -n` -- use `return` (or `yield`) for Perl
+  `print`:
+
+```
+... | py -l { if re.search(..., _): return _ }
+```
+
+* Phrasebook for `perl -l` with several `print`s -- use `yield` for
+  Perl `print`:
+
+```
+... | py -la { if _[0] == 'yes': for x in _[1:]: yield x }
+```
 
 * Sum up a bunch of numbers:
 ```
