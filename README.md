@@ -55,28 +55,34 @@ number of ways.
    `sh() { ... }`.  The accepted keyword arguments are similar to
    those accepted by `subprocess`: e.g. `stderr`, `timeout`, `check`.
 
- * Small but important: in addition to the usual indentation-based
-   syntax for closing a block (for control flow, function definition,
-   etc.), a block may be closed with a keyword `end`, placed
-   syntactically like a statement in the block.
-   
-   Combined with Python's existing use of semicolon `;` as an
-   alternative to a newline for separating statements, this makes the
-   full range of Python's semantics available in a one-liner, which is
-   important in interactive use.
-   
-   `... | py -l { try: ...; end; except: ... }`
+ * Small but important: we make a couple of extensions to permit the
+   full range of Python's semantics to be used without newlines, in a
+   one-liner, which is important for interactive use.  These build on
+   Python's existing use of semicolon `;` as an alternative to a
+   newline for separating statements.
 
-   *(Ideally these would be pure "syntax extensions" in the sense that
+   * In Python, the semicolon is only available for separating "simple
+     statements", i.e. those that don't contain other statements.  In
+     Shython, a semicolon can be used to separate any kind of statement.
+
+   * In addition to Python's indentation-based syntax for closing a
+     block (for control flow, function definition, etc.), a block may
+     be closed with a keyword `end`, placed syntactically like a
+     statement in the block.
+
+     `... | py -l { try: ...; end; except: ... }`
+
+     *(For a `try` block in particular, maybe even the `end` should be
+     optional?  Unlike with `if/if/else` where either `if` could go
+     without an `else`, where there's a `try` there must be a coming
+     `except` or `finally`, so `except` closing a `try` block is
+     unambiguous.)*
+
+ * *(Ideally these would be pure "syntax extensions" in the sense that
    every syntactically-valid Python program parses as a Shython
    program with the exact same meaning.  The `sh { ... }` should meet
-   that, but `end` doesn't.  Maybe double-semicolon `;;` instead?)*
-
-   *(For a `try` block in particular, maybe even the `end` should be
-   optional?  Unlike with `if/if/else` where either `if` could go
-   without an `else`, where there's a `try` there must be a coming
-   `except` or `finally`, so `except` closing a `try` block is
-   unambiguous.)*
+   that, and the expanded `;`, but `end` doesn't.  Maybe
+   double-semicolon `;;` instead?)*
 
 Shython is implemented by a modified version of CPython's parser,
 generating bytecode to run on the unmodified CPython interpreter.
