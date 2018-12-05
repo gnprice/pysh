@@ -248,7 +248,11 @@ Execution happens as follows:
    noninteractive...)*
 
  * With `-l`/`--lines`, the block is executed once for each line in
-   its input, with `_` set to the line with its newline removed.  Each
+   its input.  The `break` statement is available; when executed, the
+   entire Shython command ends, without executing the block on any
+   subsequent lines.
+
+   The local `_` is set to the line with its newline removed.  Each
    produced value has a newline appended before printing, except that
    `None` converts to no output rather than to a blank line.
    
