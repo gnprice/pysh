@@ -234,6 +234,7 @@ it is converted to a string as follows:
    those like it is at the REPL.  And of course you can always apply
    whatever conversion you want explicitly.)*
 
+
 Execution happens as follows:
 
  * With no options, the block is executed once.
@@ -255,7 +256,14 @@ Execution happens as follows:
    The local `_` is set to the line with its newline removed.  Each
    produced value has a newline appended before printing, except that
    `None` converts to no output rather than to a blank line.
-   
+
+ * *(Some analogue / better version of `perl -ne '... END { ... }'`?
+   Or maybe you just take that outside the pipeline, enjoying the fact
+   it's the same program inside and out.  Example below.)*
+
+
+Several options modify the handling of input and output:
+
  * With `-0`, the "line" terminator for `-l` is a null byte, rather
    than newline.  Implies `-l`.
 
@@ -274,10 +282,6 @@ Execution happens as follows:
    think there are cases where integration with Python -- perhaps
    especially with a surrounding Shython program -- is what's needed,
    and this beats an explicit `json.load`/`json.dump`.)*
-
- * *(Some analogue / better version of `perl -ne '... END { ... }'`?
-   Or maybe you just take that outside the pipeline, enjoying the fact
-   it's the same program inside and out.  Example below.)*
 
  * *(Maybe a way to name parameters?  Especially handy with `-a`.)*
 
