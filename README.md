@@ -248,27 +248,55 @@ Execution happens as follows:
    surprising behavior of eating its input even when
    noninteractive...)*
 
- * With `-l`/`--lines`, the block is executed once for each line in
-   its input.  The `break` statement is available; when executed, the
-   entire Shython command ends, without executing the block on any
-   subsequent lines.
+ * With `--iter` (*), the local `_` is set to an iterator which yields
+   in turn each line of the command's input, with its newline removed.
+   Each produced value has a newline appended before printing, except
+   that a produced `None` is ignored, as if nothing was produced.
 
-   The local `_` is set to the line with its newline removed.  Each
-   produced value has a newline appended before printing, except that
-   a produced `None` is ignored, as if nothing was produced.
+   (*) *(Alternate names: `--whole`?  `--iter-lines`?  Needs a short
+   name: `-i`? `-w`?)*
+
+ * With `-l`/`--lines`, the command is executed much as if wrapped in
+   a loop inside `--iter`:
+
+   ```
+   py --iter {
+     for _ in _:
+       ...  # the given block
+   }
+   ```
+
+   That is: the block is executed once for each line in its input,
+   with `_` set to the line with its newline removed; and produced
+   values are treated as with `--iter`.
+
+   Unlike the hypothetical loop above: `return` means ending this
+   execution of the block, as always, after which the block is
+   executed for the next line; and the `break` statement is available,
+   and ends the execution of the whole loop.
 
  * *(Some analogue / better version of `perl -ne '... END { ... }'`?
    Or maybe you just take that outside the pipeline, enjoying the fact
    it's the same program inside and out.  Example below.)*
 
+*(I feel like there's a couple of logically-orthogonal axes here that
+several of these options are acting on both of: whether to operate on
+the whole, or an iterator of records, or once per record; and how to
+parse and unparse records, like terminator chop/append, or JSON.
+Probably the options really should be non-orthogonal -- I rarely use
+`perl -p` or `perl -n` without `-l`, and just discovered last week
+that `perl -l` implies `-n` -- but the spec can probably benefit from
+some refactoring.)*
 
 Several options modify the handling of input and output:
 
- * With `-0`, the "line" terminator for `-l` is a null byte, rather
-   than newline.  Implies `-l`.
+ * With `-0`, the "line" terminator for `-l` or `--iter` is a null
+   byte, rather than newline.  Implies `-l`, unless `--iter` is
+   specified.
 
  * With `-a`, each line (or "line" with `-0`) is split with `.split()`
-   and `_` is set to the resulting list.  Implies `-l`.
+   and `_` is set to the resulting list.  Implies `-l`, unless
+   `--iter` is specified.
    
    *(Or maybe this is superfluous because `str.split` is right
    there?)*
@@ -282,6 +310,10 @@ Several options modify the handling of input and output:
    the block is executed once with `_` set to each value in turn.
    Each resulting value is converted with `json.dump` in place of the
    conversions described above, followed by a newline.
+
+   In conjunction with `--iter`, the block is executed once, with `_`
+   set to an iterator that yields the parsed JSON values, and with
+   output processed in the same way.
 
    *(Overlaps a bit with `jq` which is hard to compete with, but I
    think there are cases where integration with Python -- perhaps
@@ -311,7 +343,7 @@ Several options modify the handling of input and output:
 * Sum up a bunch of numbers:
 ```
 ... | perl -lane 'print $F[0] if (/.../)' \
-  | py { sum(_) }
+  | py --iter { sum(int(l) for l in _) }
 ```
 
 * Aggregate some data (a bit like Perl's `END { ... }`):
