@@ -44,6 +44,12 @@ Design choices include:
 Shython is based on Python 3.7, with its syntax extended in a small
 number of ways.
 
+These are pure "extensions" of Python's syntax, in the sense that
+every syntactically-valid Python program parses as a Shython program
+with the exact same meaning.  *(Or so we believe!  For `sh { ... }` in
+particular I won't feel quite certain without some careful analysis of
+the formal grammar.)*
+
  * The big one: in addition to all the usual forms from Python, a
    Shython expression may be a *Pysh escape*, written `sh { ... }`
    where the braces enclose a Pysh term.  When this expression is
@@ -67,22 +73,20 @@ number of ways.
 
    * In addition to Python's indentation-based syntax for closing a
      block (for control flow, function definition, etc.), a block may
-     be closed with a keyword `end`, placed syntactically like a
-     statement in the block.
+     be closed with a new delimiter token `;;`:
 
-     `... | py -l { try: ...; end; except: ... }`
+     `... | py -l { try: ...;; except: ... }`
 
-     *(For a `try` block in particular, maybe even the `end` should be
-     optional?  Unlike with `if/if/else` where either `if` could go
-     without an `else`, where there's a `try` there must be a coming
-     `except` or `finally`, so `except` closing a `try` block is
-     unambiguous.)*
+     *(Alternatively something like `end` would feel more Pythonic --
+     compare `... if ... else ...` -- but would mean adding a keyword.)*
 
- * *(Ideally these would be pure "syntax extensions" in the sense that
-   every syntactically-valid Python program parses as a Shython
-   program with the exact same meaning.  The `sh { ... }` should meet
-   that, and the expanded `;`, but `end` doesn't.  Maybe
-   double-semicolon `;;` instead?)*
+     *(The worst thing about this syntax may be that it's visually
+     pretty subtle.  But maybe that's OK in a one-liner?  If it's
+     going to last more than a day or so, you should be putting it in
+     a script and formatting with nice indentation, just like shell or
+     Perl... and if it's simple enough to belong on one line even in a
+     script, maybe the `try` and `except` and so on are enough to make
+     the structure visually obvious.)*
 
 Shython is implemented by a modified version of CPython's parser,
 generating bytecode to run on the unmodified CPython interpreter.
