@@ -210,6 +210,17 @@ this command is run, the enclosed block is executed one or more times.
 It may produce values to be printed to its standard output; it may
 receive its standard input as one or more local variables like `_`.
 
+When run, a block may *produce* zero or more values in any one of the
+following ways:
+ * If the block consists of a single expression (and contains no
+   `yield` expression), then it produces that expression's value.
+ * Otherwise, the block behaves like the body of a Python function
+   definition:
+   * If it contains no `yield` expression, then `return` produces the
+     returned value, and finishing without `return` produces `None`.
+   * If it does contain a `yield`, then each `yield` produces the
+     yielded value.
+
 When a value produced by the block is printed to the command's output,
 it is converted to a string as follows:
  * A string is used unmodified.
@@ -223,9 +234,9 @@ it is converted to a string as follows:
    those like it is at the REPL.  And of course you can always apply
    whatever conversion you want explicitly.)*
 
- * With no options, the block is executed once.  It may `return` a
-   value; or if it consists of a single expression, the expression's
-   value is implicitly returned.
+Execution happens as follows:
+
+ * With no options, the block is executed once.
 
    If the command's stdin comes from a redirection or pipe, then the
    complete input is provided as a string in the local `_`.
@@ -238,8 +249,8 @@ it is converted to a string as follows:
 
  * With `-l`/`--lines`, the block is executed once for each line in
    its input, with `_` set to the line with its newline removed.  Each
-   resulting value is printed with a newline appended, except that
-   `None` converts to no output rather than a blank line.
+   produced value has a newline appended before printing, except that
+   `None` converts to no output rather than to a blank line.
    
  * With `-0`, the "line" terminator for `-l` is a null byte, rather
    than newline.  Implies `-l`.
