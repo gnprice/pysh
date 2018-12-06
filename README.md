@@ -404,15 +404,119 @@ aka `[` -- or was that `[[`?  A lot of that is just that `if [ -z
 valuable and need a new or rebuilt home.)*
 
 
-#### Other Important Bits
+### Functions
+
+Some design considerations for function definitions:
+* It should be easy to write a function once, and call it from both
+  Pysh and Shython code in the same program.
+* A shell function's API is a CLI.  So the same function needs to have
+  a reasonable Python-style calling convention, and a CLI.
+* In our experience in Bash scripts, a function using `echo` or
+  `printf` is most often doing so where a comparable function written
+  in Python would use `return`.  Ideally when writing such a function in
+  Shython we would also use `return`.
+
+A design:
+
+Shell functions in Pysh are written in Shython; the shell syntax has
+no function-definition syntax of its own.
+
+A Pysh function is defined using the [Click][click] library.  A few
+differences from normal Click usage make it convenient to call the
+same function from other Shython code as well as from Pysh:
+
+* Instead of `click.command` or `click.group`, use the decorators
+  `pysh.func` and `pysh.group_func`.
+
+* These decorators return the unmodified function, rather than the
+  `click.Command` or `click.Group`, so the function can be called
+  normally from Shython.
+
+* Depending on options passed to `pysh.func` (or `.command` used
+  underneath a `pysh.func`), the function may be exposed to Pysh in
+  any of several ways:
+
+  * With `style=expr`, when the function is invoked from Pysh as a
+    shell function (e.g. `greet world`), its return value is processed
+    into the command's output in the same way as for the block in a
+    Shython command (so like `py { greet("world") }`).
+
+    Failure may be signaled by raising an exception.  If the
+    function's execution ends with an uncaught `pysh.Return`, the
+    command's exit status will be the exception's `status` attribute;
+    if with any other uncaught exception, status 1; if the function
+    completes normally, status 0.
+
+    *(The default?)*
+
+  * With `style=unix`, the function is expected to return an int for its
+    shell return status.  The `click.echo` function may be used to
+    print output; when the function is executed as a Pysh command,
+    output printed through `click.echo` will go to the command's
+    output (or its stderr for `click.echo(..., err=True)`.)
+
+    *(This form seems pretty shell-centric, and unlikely to be useful
+    to call from Shython.)*
+
+  * *(Others?)*
+
+[click]: https://click.palletsprojects.com
+
+
+#### Examples
+
+##### peel_committish
+
+From `git-sh-setup`, the shell library shared by many Git commands:
+```
+peel_committish () {
+	case "$1" in
+	:/*)
+		peeltmp=$(git rev-parse --verify "$1") &&
+		git rev-parse --verify "${peeltmp}^0"
+		;;
+	*)
+		git rev-parse --verify "${1}^0"
+		;;
+	esac
+}
+```
+
+Shython equivalent:
+```
+@pysh.func()
+@click.argument('committish')
+def peel_committish(committish):
+    if committish.startswith(':/'):
+        committish = sh { git rev-parse --verify $committish }
+    return sh { git rev-parse --verify $"{committish}^0" }
+```
+
+And usage:
+```
+# Pysh
+rev=$(peel_committish $revname)
+
+# Shython
+rev = peel_committish(revname)
+```
+
+Notes:
+* This isn't the strongest example, because you could just write
+  `rev=${peel_committish(revname)}` and skip the whole CLI part.
+* Uses the `$"...{foo}..."` syntax Nelson suggested to abbreviate
+  `${f'...{foo}...'}`, not yet written up above.
+* It's essential that if either `git rev-parse` fails, the function
+  fails.  Specced above is "much like `subprocess.check_output`",
+  which does mean that.
+
+
+### Other Important Bits
 
 * Variable definitions/assigments need some thought.
   `py { foo = bar[baz] }` "works"... but adds up to a lot of friction
   in the source code crossing the language boundary all the time,
   unless you really push all but small bits out into Shython.
-
-* Functions.  Pysh syntax for defining them; how they interact when
-  invoked as a command.
 
 * Bytes vs. strings.  I'm not sure Python 3's standard behavior here
   when it comes to things like filenames and command-line arguments is
