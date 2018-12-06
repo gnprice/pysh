@@ -429,6 +429,16 @@ valuable and need a new or rebuilt home.)*
   promises about the actual fd 0, 1, and 2, or even `sys.stdin` etc.,
   because we're handling that data flow in more Python-natural ways.
 
+  One especially important aspect of these semantics is *streaming*: a
+  `py ... { ... }` Shython command with `--lines` or `--iter` (or
+  other flags that imply those or similar behavior) should consume
+  input as it's produced, and produce output as it's in turn consumed,
+  with something like bounded buffers on each side, just like with an
+  actual system pipe.  That way we get output promptly when the
+  pipeline is slow or if it's processing real-time input -- plus it
+  helps us keep a bit of a lid on memory consumption, and it means
+  sticking `| head` at the end can prevent doing a ton of work.
+
 
 ## Interactive Use
 
