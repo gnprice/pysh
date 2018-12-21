@@ -67,7 +67,9 @@ def split(input, *, lines=False):
 def _test():
     from pprint import pprint
 
+    from . import cmd
+
     pprint(list(
-        cat(b'/etc/shells') | split(lines=True)
+        cmd.cat(b'/etc/shells') | cmd.split(lines=True)
         # sh { cat /etc/shells | split -l }
     ))
