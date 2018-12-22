@@ -1,6 +1,8 @@
 '''
 Demo usage:
-  python3.7 -c 'import pysh.cmd; pysh.cmd._test()'
+  python3.7 -c 'import pysh.cmd; pysh.cmd.test_pipeline()'
+OR
+  py.test pysh/cmd.py
 
 '''
 
@@ -64,12 +66,13 @@ def split(input, *, lines=False):
         yield fragment
 
 
-def _test():
+def test_pipeline():
     from pprint import pprint
 
     from . import cmd
 
-    pprint(list(
+    pipeline = list(
         cmd.cat(b'/etc/shells') | cmd.split(lines=True)
         # sh { cat /etc/shells | split -l }
-    ))
+    )
+    assert pipeline == open('/etc/shells', 'rb').read().rstrip(b"\n").split(b"\n")
