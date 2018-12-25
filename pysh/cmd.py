@@ -103,6 +103,7 @@ def run(output, fmt, *args):
 #  [x] run
 #  [x] read
 #  [ ] shwords for lists: `{:@}`
+#  [ ] `run` accept input
 #  [ ] `echo` builtin: `echo "$foo" | ...`
 #  [ ] `join` inverse of `split` (as `echo` is to `read`)
 #  [ ] redirect `2>/dev/null` and `2>&`; perhaps e.g.
