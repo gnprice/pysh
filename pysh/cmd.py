@@ -7,6 +7,9 @@ OR
 '''
 
 import io
+import subprocess
+
+from pysh.words import shwords
 
 
 class pysh:
@@ -66,6 +69,26 @@ def split(input, *, lines=False):
         yield fragment
 
 
+@pysh.filter
+# input none
+@pysh.output(type='stream')
+@pysh.argument()
+@pysh.argument(n='*')
+def run(output, fmt, *args):
+    cmd = shwords(fmt, *args)
+    # Compare subprocess.run and Popen.communicate, in cpython:Lib/subprocess.py.
+    with subprocess.Popen(
+            cmd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE) as proc:
+        # This mirrors what Popen.communicate does, except with a `.read()`
+        # expanded to pipeline chunks.
+        for chunk in chunks(proc.stdout):
+            output.write(chunk)
+        proc.stdout.close()
+        retcode = proc.wait()
+        if retcode:
+            raise subprocess.CalledProcessError(retcode, cmd)
+
+
 def test_pipeline():
     from pprint import pprint
 
@@ -76,3 +99,11 @@ def test_pipeline():
         # sh { cat /etc/shells | split -l }
     )
     assert pipeline == open('/etc/shells', 'rb').read().rstrip(b"\n").split(b"\n")
+
+
+def test_run():
+    from . import cmd
+    # (Commits in this repo's history.)
+    assert list(cmd.run('git log --abbrev=9 --format=%p {}', '9cdfc6d46')
+                | cmd.split(lines=True)) \
+        == [b'a515d0250', b'c90596c89', b'']
