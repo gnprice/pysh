@@ -96,6 +96,28 @@ def run(output, fmt, *args):
             raise subprocess.CalledProcessError(retcode, cmd)
 
 
+# TODO -- Features needed for translating everyday shell scripts without bloat.
+#  [x] CLI parsing (use Click)
+#  [x] pipelines, with split
+#  [x] shwords
+#  [x] run
+#  [x] read
+#  [ ] shwords for lists: `{:@}`
+#  [ ] `echo` builtin: `echo "$foo" | ...`
+#  [ ] `join` inverse of `split` (as `echo` is to `read`)
+#  [ ] redirect `2>/dev/null` and `2>&`; perhaps e.g.
+#      `cmd.run(..., _stderr=cmd.DEVNULL)` (and let other kwargs
+#      go to shwords)?
+#  [ ] globs (check if stdlib glob is enough)
+#
+# Nice to have:
+#  [ ] async
+#  [ ] maybe some sugar for functions like this:
+#        run() { lxc-attach -n "$CONTAINER_NAME" -- "$@"; }
+#      Already not too hard to write with `shwords` and `{:@}`, though.
+#  [ ] test operators? -f -d -r -x, maybe a few more
+
+
 def test_pipeline():
     from . import cmd
 
