@@ -99,6 +99,6 @@ def test_pipeline():
 def test_run():
     from . import cmd
     # (Commits in this repo's history.)
-    assert list(cmd.run('git log --abbrev=9 --format=%p {}', '9cdfc6d46')
+    assert list(cmd.run('git log --abbrev=9 --format={} {}', '%p', '9cdfc6d46')
                 | cmd.split(lines=True)) \
         == [b'a515d0250', b'c90596c89', b'']

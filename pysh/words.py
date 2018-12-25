@@ -13,9 +13,7 @@ def shwords(format_string, *args, **kwargs):
       word.append(words[0])
       if len(words) > 1:
         result.append(''.join(word))
-        word = []
-        if words[-1] == '':
-          words.pop()
+        word = [words.pop()]
         result.extend(words[1:])
 
     # This is largely cribbed from cpython Formatter.vformat in
@@ -63,3 +61,8 @@ def test_shwords():
                   outdir='/path/with/spaces in it',
                   tarball='2019 Planning (final) (v2) (final final).tgz') \
                   == ['tar', '-C', '/path/with/spaces in it', '-xzf', '2019 Planning (final) (v2) (final final).tgz']
+  assert shwords('git log --format={}', '%aN') \
+    == ['git', 'log', '--format=%aN']
+  assert shwords('{basedir}/deployments/{deploy_id}/bin/start',
+                 basedir='/srv/app', deploy_id='0f1e2d3c') \
+    == ['/srv/app/deployments/0f1e2d3c/bin/start']
