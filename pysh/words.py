@@ -13,8 +13,8 @@ def shwords(format_string, *args, **kwargs):
       word.append(words[0])
       if len(words) > 1:
         result.append(''.join(word))
-        word = [words.pop()]
-        result.extend(words[1:])
+        result.extend(words[1:-1])
+        word[:] = (words[-1],)
 
     # This is largely cribbed from cpython Formatter.vformat in
     # cpython:Lib/string.py
