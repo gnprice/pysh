@@ -15,8 +15,8 @@ def pipe_by_stream(left: 'Filter', right: 'Filter'):
 
 
 class Filter:
-    input: str   # 'none' | 'stream' | 'iter' | ...
-    output: str  # 'none' | 'stream' | 'iter' | ...
+    input: str   # 'none' | 'stream' | 'iter' | 'bytes' | ...
+    output: str  # 'none' | 'stream' | 'iter' | 'bytes' | ...
     thunk: Callable[[Any, Any], None]
 
     def __init__(self, input, output, thunk):
@@ -24,10 +24,20 @@ class Filter:
         self.output = output
         self.thunk = thunk
 
-    def __iter__(self):
-        if self.input != 'none' or self.output != 'iter':
+    def __call__(self):
+        if self.input != 'none':
             raise RuntimeError()
-        return self.thunk(None, None)
+        if self.output in ('none', 'iter', 'bytes'):
+            return self.thunk(None, None)
+        elif self.output == 'stream':
+            raise NotImplementedError()  # Return the pipe/stream.
+        else:
+            assert False
+
+    def __iter__(self):
+        if self.output != 'iter':
+            raise RuntimeError()
+        return self()
 
     def __or__(self, other: 'Filter'):
         '''Aka `|` -- the pipe operator.'''

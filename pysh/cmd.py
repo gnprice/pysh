@@ -68,6 +68,15 @@ def split(input, *, lines=False):
 
 
 @pysh.filter
+@pysh.input(type='stream')
+@pysh.output(type='bytes')
+def read(input):
+    # Bash deletes trailing newlines from output in `$(...)`.
+    # See manual, 3.5.4 Command Substitution.
+    return input.read().rstrip(b'\n')
+
+
+@pysh.filter
 # input none
 @pysh.output(type='stream')
 @pysh.argument()
@@ -90,10 +99,15 @@ def run(output, fmt, *args):
 def test_pipeline():
     from . import cmd
 
-    pipeline = cmd.cat(b'/etc/shells') | cmd.split(lines=True)
-    #        = sh { cat /etc/shells | split -l }
-    assert list(pipeline) \
-        == open('/etc/shells', 'rb').read().rstrip(b"\n").split(b"\n")
+    assert list(
+        cmd.cat(b'/etc/shells') | cmd.split(lines=True)
+        # sh { cat /etc/shells | split -l }
+    ) == open('/etc/shells', 'rb').read().rstrip(b"\n").split(b"\n")
+
+    assert (
+        (cmd.run('git rev-parse {}', 'dbccdbe6f~2') | cmd.read())()
+        # sh { git rev-parse ${commitish} | read }
+    ) == b'91a20bf6b4a72f1f84b2f57cf38b3f771dd35fda'
 
 
 def test_run():
