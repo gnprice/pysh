@@ -1,6 +1,6 @@
 import string
 
-def shformat(format_string, *args, **kwargs):
+def shwords(format_string, *args, **kwargs):
   formatter = string.Formatter()
   result = []
   word = []
@@ -54,12 +54,12 @@ def shformat(format_string, *args, **kwargs):
     result.append(''.join(word))
     return result
 
-def test_shformat():
-  assert shformat('git grep {}', 'hello world') \
+def test_shwords():
+  assert shwords('git grep {}', 'hello world') \
     == ['git', 'grep', 'hello world']
-  assert shformat('{} {} {}', 'a', 'b c', 'd') \
+  assert shwords('{} {} {}', 'a', 'b c', 'd') \
     == ['a', 'b c', 'd']
-  assert shformat('tar -C {outdir} -xzf {tarball}',
+  assert shwords('tar -C {outdir} -xzf {tarball}',
                   outdir='/path/with/spaces in it',
                   tarball='2019 Planning (final) (v2) (final final).tgz') \
                   == ['tar', '-C', '/path/with/spaces in it', '-xzf', '2019 Planning (final) (v2) (final final).tgz']
