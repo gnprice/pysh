@@ -20,9 +20,16 @@ def shwords(format_string, *args, **kwargs):
   result = []
   word = []
   auto_arg_index = 0
+  after_list = False
 
   for literal_text, field_name, format_spec, conversion in \
       _string.formatter_parser(format_string.strip()):
+    if after_list:
+      after_list = False
+      if not literal_text.startswith(' '):
+        raise ValueError("Invalid use of {!@} not as whole words")
+      literal_text = literal_text.lstrip(' ')
+
     if literal_text:
       words = re.split(' +', literal_text)
       word.append(words[0])
@@ -60,7 +67,7 @@ def shwords(format_string, *args, **kwargs):
         if word:
           raise ValueError("Invalid use of {!@} not as whole words")
         result.extend(format(item, format_spec) for item in obj)
-        # TODO check other side
+        after_list = True
       else:
         raise ValueError("Unknown conversion specifier {0!s}".format(conversion))
 
@@ -74,8 +81,19 @@ def test_conversions():
   with pytest.raises(ValueError):
     shwords('{:{}}', 1, 2)
   assert '{:{}}'.format(1, 2) == ' 1'  # by contrast
+
+def test_multiword():
+  import pytest
   assert shwords('touch {!@}', ['a', 'b']) \
     == ['touch', 'a', 'b']
+  with pytest.raises(ValueError):
+    shwords('a b{!@}', ['x'])
+  with pytest.raises(ValueError):
+    shwords('a {!@}c', ['x'])
+  with pytest.raises(ValueError):
+    shwords('a {!@}{}', ['b'], 'c')
+  assert shwords('touch {!@} c', ['a', 'b']) \
+    == ['touch', 'a', 'b', 'c']
 
 def test_splitting():
   assert shwords('git grep {}', 'hello world') \
