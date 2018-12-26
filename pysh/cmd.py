@@ -102,7 +102,7 @@ def run(output, fmt, *args):
 #  [x] shwords
 #  [x] run
 #  [x] read
-#  [ ] shwords for lists: `{:@}`
+#  [x] shwords for lists: `{!@}`
 #  [ ] `run` accept input
 #  [ ] `echo` builtin: `echo "$foo" | ...`
 #  [ ] `join` inverse of `split` (as `echo` is to `read`)
@@ -115,7 +115,7 @@ def run(output, fmt, *args):
 #  [ ] async
 #  [ ] maybe some sugar for functions like this:
 #        run() { lxc-attach -n "$CONTAINER_NAME" -- "$@"; }
-#      Already not too hard to write with `shwords` and `{:@}`, though.
+#      Already not too hard to write with `shwords` and `{!@}`, though.
 #  [ ] test operators? -f -d -r -x, maybe a few more
 
 
