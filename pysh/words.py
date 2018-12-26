@@ -1,3 +1,4 @@
+import re
 import _string
 
 
@@ -33,9 +34,9 @@ def shwords(format_string, *args, **kwargs):
   auto_arg_index = 0
 
   for literal_text, field_name, format_spec, conversion in \
-      _string.formatter_parser(format_string):
+      _string.formatter_parser(format_string.strip()):
     if literal_text:
-      words = literal_text.split(' ')
+      words = re.split(' +', literal_text)
       word.append(words[0])
       if len(words) > 1:
         result.append(''.join(word))
@@ -79,6 +80,8 @@ def test_splitting():
     == ['git', 'grep', 'hello world']
   assert shwords('{} {} {}', 'a', 'b c', 'd') \
     == ['a', 'b c', 'd']
+  assert shwords('  a  {} c ', 'b') \
+    == ['a', 'b', 'c']
   assert shwords('tar -C {outdir} -xzf {tarball}',
                   outdir='/path/with/spaces in it',
                   tarball='2019 Planning (final) (v2) (final final).tgz') \
