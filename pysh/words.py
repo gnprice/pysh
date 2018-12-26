@@ -1,14 +1,39 @@
-import string
+import _string
+
+
+def convert_field(value, conversion):
+    if conversion is None:
+        return value
+    elif conversion == 's':
+        return str(value)
+    elif conversion == 'r':
+        return repr(value)
+    elif conversion == 'a':
+        return ascii(value)
+    raise ValueError("Unknown conversion specifier {0!s}".format(conversion))
+
+
+def get_field(field_name, args, kwargs):
+    first, rest = _string.formatter_field_name_split(field_name)
+
+    obj = args[first] if isinstance(first, int) else kwargs[first]
+
+    for is_attr, i in rest:
+        if is_attr:
+            obj = getattr(obj, i)
+        else:
+            obj = obj[i]
+
+    return obj, first
 
 
 def shwords(format_string, *args, **kwargs):
-  formatter = string.Formatter()
   result = []
   word = []
   auto_arg_index = 0
 
   for literal_text, field_name, format_spec, conversion in \
-      formatter.parse(format_string):
+      _string.formatter_parser(format_string):
     if literal_text:
       words = literal_text.split(' ')
       word.append(words[0])
@@ -34,11 +59,11 @@ def shwords(format_string, *args, **kwargs):
                            'numbering')
         auto_arg_index = False
 
-      obj, arg_used = formatter.get_field(field_name, args, kwargs)
+      obj, arg_used = get_field(field_name, args, kwargs)
 
-      obj = formatter.convert_field(obj, conversion)
+      obj = convert_field(obj, conversion)
 
-      word.append(formatter.format_field(obj, format_spec))
+      word.append(format(obj, format_spec))
 
   if word:
     result.append(''.join(word))
