@@ -66,7 +66,7 @@ def shwords(format_string, *args, **kwargs):
 
   if word:
     result.append(''.join(word))
-    return result
+  return result
 
 
 def test_conversions():
