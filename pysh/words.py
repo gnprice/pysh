@@ -43,9 +43,6 @@ def shwords(format_string, *args, **kwargs):
       # do any conversion on the resulting object
       obj = formatter.convert_field(obj, conversion)
 
-      # expand the format spec, if needed
-      format_spec = formatter.vformat(format_spec, args, kwargs)
-
       # format the object and append to the result
       word.append(formatter.format_field(obj, format_spec))
 
@@ -54,7 +51,13 @@ def shwords(format_string, *args, **kwargs):
     return result
 
 
-def test_shwords():
+def test_conversions():
+  import pytest
+  with pytest.raises(ValueError):
+    shwords('{:{}}', 1, 2)
+  assert '{:{}}'.format(1, 2) == ' 1'  # by contrast
+
+def test_splitting():
   assert shwords('git grep {}', 'hello world') \
     == ['git', 'grep', 'hello world']
   assert shwords('{} {} {}', 'a', 'b c', 'd') \
@@ -63,6 +66,8 @@ def test_shwords():
                   outdir='/path/with/spaces in it',
                   tarball='2019 Planning (final) (v2) (final final).tgz') \
                   == ['tar', '-C', '/path/with/spaces in it', '-xzf', '2019 Planning (final) (v2) (final final).tgz']
+
+def test_within_word():
   assert shwords('git log --format={}', '%aN') \
     == ['git', 'log', '--format=%aN']
   assert shwords('{basedir}/deployments/{deploy_id}/bin/start',
