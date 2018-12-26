@@ -16,22 +16,35 @@ def get_field(field_name, args, kwargs):
     return obj
 
 
+PAT_SPACE = re.compile(r' +')
+PAT_SPACE_OR_END = re.compile(r' +|\Z')
+
+# Based on MarkupIterator_next in cpython:Objects/stringlib/unicode_format.h.
+PAT_LITERAL = re.compile(r'(?: [^{}] | \{\{ | \}\} )*', re.X)
+
+# Based on parse_field in cpython:Objects/stringlib/unicode_format.h.
+PAT_MARKUP = re.compile(
+  r'''\{
+         (?P<field_name>  (?: [^[{}:!] | \[ [^]]* \] )* )
+         (?: \! (?P<conversion> [^:}] ) )?
+         (?P<format_spec> (?: : [^{}]* )? )
+      \}''', re.X)
+
+
 def shwords(format_string, *args, **kwargs):
   result = []
-  word = []
+
+  fmt = format_string.strip()
+  pos = 0
   auto_arg_index = 0
-  after_list = False
-
-  for literal_text, field_name, format_spec, conversion in \
-      _string.formatter_parser(format_string.strip()):
-    if after_list:
-      after_list = False
-      if not literal_text.startswith(' '):
-        raise ValueError("Invalid use of {!@} not as whole words")
-      literal_text = literal_text.lstrip(' ')
-
-    if literal_text:
-      words = re.split(' +', literal_text)
+  word = []
+  while pos < len(fmt):
+    match = PAT_LITERAL.match(fmt, pos)
+    pos = match.end()
+    literal_raw = match[0]
+    if literal_raw:
+      literal = literal_raw.replace('{{', '{').replace('}}', '}')
+      words = PAT_SPACE.split(literal)
       word.append(words[0])
       if len(words) > 1:
         result.append(''.join(word))
@@ -40,9 +53,14 @@ def shwords(format_string, *args, **kwargs):
         if words[-1]:
           word.append(words[-1])
 
-    # This is largely cribbed from cpython Formatter.vformat in
-    # cpython:Lib/string.py
-    if field_name is not None:
+    match = PAT_MARKUP.match(fmt, pos)
+    if pos < len(fmt) and not match:
+      raise ValueError("bad format string: {!s} (at char {})".format(
+        format_string, pos))
+    while match:
+      pos = match.end()
+      field_name, conversion, format_spec = match.groups()
+
       if field_name == '':
         if auto_arg_index is False:
           raise ValueError('cannot switch from manual field '
@@ -64,12 +82,15 @@ def shwords(format_string, *args, **kwargs):
       elif conversion == 's':
         word.append(format(str(obj), format_spec))
       elif conversion == '@':
-        if word:
+        match = PAT_SPACE_OR_END.match(fmt, pos)
+        if word or (match is None):
           raise ValueError("Invalid use of {!@} not as whole words")
+        pos = match.end()
         result.extend(format(item, format_spec) for item in obj)
-        after_list = True
       else:
         raise ValueError("Unknown conversion specifier {0!s}".format(conversion))
+
+      match = PAT_MARKUP.match(fmt, pos)
 
   if word:
     result.append(''.join(word))
