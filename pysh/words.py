@@ -1,5 +1,6 @@
 import string
 
+
 def shwords(format_string, *args, **kwargs):
   formatter = string.Formatter()
   result = []
@@ -20,20 +21,20 @@ def shwords(format_string, *args, **kwargs):
     # cpython:Lib/string.py
     if field_name is not None:
       if field_name == '':
-          if auto_arg_index is False:
-              raise ValueError('cannot switch from manual field '
-                               'specification to automatic field '
-                               'numbering')
-          field_name = str(auto_arg_index)
-          auto_arg_index += 1
+        if auto_arg_index is False:
+          raise ValueError('cannot switch from manual field '
+                           'specification to automatic field '
+                           'numbering')
+        field_name = str(auto_arg_index)
+        auto_arg_index += 1
       elif field_name.isdigit():
-          if auto_arg_index:
-              raise ValueError('cannot switch from manual field '
-                               'specification to automatic field '
-                               'numbering')
-          # disable auto arg incrementing, if it gets
-          # used later on, then an exception will be raised
-          auto_arg_index = False
+        if auto_arg_index:
+          raise ValueError('cannot switch from manual field '
+                           'specification to automatic field '
+                           'numbering')
+        # disable auto arg incrementing, if it gets
+        # used later on, then an exception will be raised
+        auto_arg_index = False
 
       # given the field_name, find the object it references
       #  and the argument it came from
@@ -51,6 +52,7 @@ def shwords(format_string, *args, **kwargs):
   if word:
     result.append(''.join(word))
     return result
+
 
 def test_shwords():
   assert shwords('git grep {}', 'hello world') \
