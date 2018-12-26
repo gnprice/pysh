@@ -2,18 +2,6 @@ import re
 import _string
 
 
-def convert_field(value, conversion):
-    if conversion is None:
-        return value
-    elif conversion == 's':
-        return str(value)
-    elif conversion == 'r':
-        return repr(value)
-    elif conversion == 'a':
-        return ascii(value)
-    raise ValueError("Unknown conversion specifier {0!s}".format(conversion))
-
-
 def get_field(field_name, args, kwargs):
     first, rest = _string.formatter_field_name_split(field_name)
 
@@ -41,7 +29,9 @@ def shwords(format_string, *args, **kwargs):
       if len(words) > 1:
         result.append(''.join(word))
         result.extend(words[1:-1])
-        word[:] = (words[-1],)
+        word.clear()
+        if words[-1]:
+          word.append(words[-1])
 
     # This is largely cribbed from cpython Formatter.vformat in
     # cpython:Lib/string.py
@@ -61,8 +51,18 @@ def shwords(format_string, *args, **kwargs):
         auto_arg_index = False
 
       obj = get_field(field_name, args, kwargs)
-      obj = convert_field(obj, conversion)
-      word.append(format(obj, format_spec))
+
+      if conversion is None:
+        word.append(format(obj, format_spec))
+      elif conversion == 's':
+        word.append(format(str(obj), format_spec))
+      elif conversion == '@':
+        if word:
+          raise ValueError("Invalid use of {!@} not as whole words")
+        result.extend(format(item, format_spec) for item in obj)
+        # TODO check other side
+      else:
+        raise ValueError("Unknown conversion specifier {0!s}".format(conversion))
 
   if word:
     result.append(''.join(word))
@@ -74,6 +74,8 @@ def test_conversions():
   with pytest.raises(ValueError):
     shwords('{:{}}', 1, 2)
   assert '{:{}}'.format(1, 2) == ' 1'  # by contrast
+  assert shwords('touch {!@}', ['a', 'b']) \
+    == ['touch', 'a', 'b']
 
 def test_splitting():
   assert shwords('git grep {}', 'hello world') \
