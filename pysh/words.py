@@ -24,7 +24,7 @@ def get_field(field_name, args, kwargs):
         else:
             obj = obj[i]
 
-    return obj, first
+    return obj
 
 
 def shwords(format_string, *args, **kwargs):
@@ -59,10 +59,8 @@ def shwords(format_string, *args, **kwargs):
                            'numbering')
         auto_arg_index = False
 
-      obj, arg_used = get_field(field_name, args, kwargs)
-
+      obj = get_field(field_name, args, kwargs)
       obj = convert_field(obj, conversion)
-
       word.append(format(obj, format_spec))
 
   if word:
