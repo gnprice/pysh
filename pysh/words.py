@@ -32,18 +32,12 @@ def shwords(format_string, *args, **kwargs):
           raise ValueError('cannot switch from manual field '
                            'specification to automatic field '
                            'numbering')
-        # disable auto arg incrementing, if it gets
-        # used later on, then an exception will be raised
         auto_arg_index = False
 
-      # given the field_name, find the object it references
-      #  and the argument it came from
       obj, arg_used = formatter.get_field(field_name, args, kwargs)
 
-      # do any conversion on the resulting object
       obj = formatter.convert_field(obj, conversion)
 
-      # format the object and append to the result
       word.append(formatter.format_field(obj, format_spec))
 
   if word:
