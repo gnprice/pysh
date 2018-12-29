@@ -90,20 +90,28 @@ def read(input):
 @pysh.argument()
 @pysh.argument(n='*')
 def run(input, output, fmt, *args):
-    if input is not None:
-        raise NotImplementedError()
     cmd = shwords(fmt, *args)
-    # Compare subprocess.run and Popen.communicate, in cpython:Lib/subprocess.py.
-    with subprocess.Popen(
-            cmd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE) as proc:
-        # This mirrors what Popen.communicate does, except with a `.read()`
-        # expanded to pipeline chunks.
-        for chunk in chunks(proc.stdout):
-            output.write(chunk)
-        proc.stdout.close()
-        retcode = proc.wait()
-        if retcode:
-            raise subprocess.CalledProcessError(retcode, cmd)
+    if input is None:
+        # Simplify in the case where no interleaved I/O is necessary.
+        # Compare subprocess.run and Popen.communicate, in cpython:Lib/subprocess.py.
+        with subprocess.Popen(
+                cmd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE) as proc:
+            # This mirrors what Popen.communicate does, except with a `.read()`
+            # expanded to pipeline chunks.
+            for chunk in chunks(proc.stdout):
+                output.write(chunk)
+            proc.stdout.close()
+            retcode = proc.wait()
+    else:
+        with subprocess.Popen(
+                cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE) as proc:
+            # TODO this just exhausts our input, then starts passing it on.
+            inbuf = input.read()
+            outbuf, _ = proc.communicate(inbuf)
+            output.write(outbuf)
+            retcode = proc.returncode
+    if retcode:
+        raise subprocess.CalledProcessError(retcode, cmd)
 
 
 # TODO -- Features needed for translating everyday shell scripts without bloat.
@@ -155,7 +163,13 @@ def test_echo():
 
 def test_run():
     from . import cmd
+
     # (Commits in this repo's history.)
     assert list(cmd.run('git log --abbrev=9 --format={} {}', '%p', '9cdfc6d46')
                 | cmd.split(lines=True)) \
         == [b'a515d0250', b'c90596c89', b'']
+
+    assert (
+        (cmd.echo(b'hello') | cmd.run('tr h H') | cmd.read())()
+        # sh { echo hello | tr h H | read }
+    ) == b'Hello'
