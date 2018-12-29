@@ -170,7 +170,7 @@ def test_run():
     ) == b'Hello'
 
     assert pysh.slurp(
-        cmd.run('git log --oneline --reverse')
+        cmd.run('git log --oneline --reverse --abbrev=9')
         | cmd.run('grep -m1 {}', 'yield')
         | cmd.run('perl -lane {}', 'print $F[0]')
     ) == b'91a20bf6b'
