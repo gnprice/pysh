@@ -39,6 +39,14 @@ def devnull(input, output):
 @pysh.filter
 # input none
 @pysh.output(type='stream')
+@pysh.argument(n='*', type=bytes)
+def echo(output, *words):
+    output.write(b' '.join(words) + b'\n')
+
+
+@pysh.filter
+# input none
+@pysh.output(type='stream')
 @pysh.argument(n='*', type='filename')
 def cat(output, *filenames):
     for filename in filenames:
@@ -104,7 +112,7 @@ def run(output, fmt, *args):
 #  [x] read
 #  [x] shwords for lists: `{!@}`
 #  [ ] `run` accept input
-#  [ ] `echo` builtin: `echo "$foo" | ...`
+#  [x] `echo` builtin: `echo "$foo" | ...`
 #  [ ] `join` inverse of `split` (as `echo` is to `read`)
 #  [ ] redirect `2>/dev/null` and `2>&`; perhaps e.g.
 #      `cmd.run(..., _stderr=cmd.DEVNULL)` (and let other kwargs
@@ -131,6 +139,13 @@ def test_pipeline():
         (cmd.run('git rev-parse {}', 'dbccdbe6f~2') | cmd.read())()
         # sh { git rev-parse ${commitish} | read }
     ) == b'91a20bf6b4a72f1f84b2f57cf38b3f771dd35fda'
+
+
+def test_echo():
+    from . import cmd
+    assert (
+        (cmd.echo(b'hello', b'world') | cmd.read())()
+    ) == b'hello world'
 
 
 def test_run():
