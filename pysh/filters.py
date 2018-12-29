@@ -1,6 +1,6 @@
 from collections import namedtuple
 import io
-from typing import Any, Callable, List
+from typing import Any, Callable, List, NamedTuple
 
 
 def pipe_by_stream(left: 'Filter', right: 'Filter'):
@@ -14,9 +14,14 @@ def pipe_by_stream(left: 'Filter', right: 'Filter'):
     return piped
 
 
+class IoSpec(NamedTuple):
+    type: str = 'none'  # 'none' | 'stream' | 'iter' | 'bytes' | ...
+    required: bool = True
+
+
 class Filter:
-    input: str   # 'none' | 'stream' | 'iter' | 'bytes' | ...
-    output: str  # 'none' | 'stream' | 'iter' | 'bytes' | ...
+    input: IoSpec
+    output: IoSpec
     thunk: Callable[[Any, Any], None]
 
     def __init__(self, input, output, thunk):
@@ -25,29 +30,29 @@ class Filter:
         self.thunk = thunk
 
     def __call__(self):
-        if self.input != 'none':
+        if self.input.type != 'none':
             raise RuntimeError()
-        if self.output in ('none', 'iter', 'bytes'):
+        if self.output.type in ('none', 'iter', 'bytes'):
             return self.thunk(None, None)
-        elif self.output == 'stream':
+        elif self.output.type == 'stream':
             raise NotImplementedError()  # Return the pipe/stream.
         else:
             assert False
 
     def __iter__(self):
-        if self.output != 'iter':
+        if self.output.type != 'iter':
             raise RuntimeError()
         return self()
 
     def __or__(self, other: 'Filter'):
         '''Aka `|` -- the pipe operator.'''
-        if self.output != other.input:
+        if self.output.type != other.input.type:
             raise RuntimeError()
-        if self.output == 'none':
+        if self.output.type == 'none':
             raise RuntimeError()
-        elif self.output == 'stream':
+        elif self.output.type == 'stream':
             thunk = pipe_by_stream(self, other)
-        elif self.output == 'iter':
+        elif self.output.type == 'iter':
             raise NotImplementedError()
         else:
             assert False
@@ -61,19 +66,19 @@ class Function:
     '''A "shell function".'''
 
     func: Callable
-    input: str   # 'none' | 'stream' | ...
-    output: str  # 'none' | 'stream' | ...
+    input: IoSpec
+    output: IoSpec
     argspecs: List[Argspec]
 
     def __init__(self, func):
         self.func = func
-        self.input = getattr(func, 'input', 'none')
-        self.output = getattr(func, 'output', 'none')
+        self.input = getattr(func, 'input', IoSpec())
+        self.output = getattr(func, 'output', IoSpec())
         self.argspecs = getattr(func, 'argspecs', [])
 
     def __call__(self, *args, **kwargs):
-        pass_input = (self.input == 'stream')
-        pass_output = (self.output == 'stream')
+        pass_input = (self.input.type == 'stream')
+        pass_output = (self.output.type == 'stream')
         if pass_input and pass_output:
             thunk = (lambda input, output:
                      self.func(input, output, *args, **kwargs))
@@ -92,14 +97,14 @@ def filter(func):
 
 def output(*, type, required=True):
     def decorate(func):
-        func.output = type
+        func.output = IoSpec(type, required)
         return func
     return decorate
 
 
 def input(*, type, required=True):
     def decorate(func):
-        func.input = type
+        func.input = IoSpec(type, required)
         return func
     return decorate
 
