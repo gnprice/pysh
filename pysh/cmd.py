@@ -121,7 +121,7 @@ def run(input, output, fmt, *args):
 #  [x] run
 #  [x] read
 #  [x] shwords for lists: `{!@}`
-#  [ ] `run` accept input
+#  [x] `run` accept input
 #  [x] `echo` builtin: `echo "$foo" | ...`
 #  [ ] `join` inverse of `split` (as `echo` is to `read`)
 #  [ ] redirect `2>/dev/null` and `2>&`; perhaps e.g.
@@ -173,3 +173,10 @@ def test_run():
         (cmd.echo(b'hello') | cmd.run('tr h H') | cmd.read())()
         # sh { echo hello | tr h H | read }
     ) == b'Hello'
+
+    assert (
+        (cmd.run('git log --oneline --reverse')
+         | cmd.run('grep -m1 {}', 'yield')
+         | cmd.run('perl -lane {}', 'print $F[0]')
+         | cmd.read())()
+    ) == b'91a20bf6b'
