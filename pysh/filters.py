@@ -60,6 +60,20 @@ class Filter:
         return Filter(self.input, other.output, thunk)
 
 
+slurp_filter = Filter(IoSpec('stream'), IoSpec('bytes'),
+                     lambda input, _: input.read().rstrip(b'\n'))
+
+def slurp(filter):
+    '''
+    Run the pipeline and capture output, stripping any trailing newlines.
+
+    Stripping trailing newlines is the same behavior as `$(...)` has
+    in Bash.  It fits nicely with conventional semantics for Unix CLI tools.
+    '''
+    # For reference on `$(...)` see Bash manual, 3.5.4 Command Substitution.
+    return (filter | slurp_filter)()
+
+
 Argspec = namedtuple('Argspec', ['type', 'n'])
 
 

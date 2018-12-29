@@ -14,6 +14,7 @@ class pysh:
     # Absurd hack to get the same names `pysh.filter` etc. below
     # as in normal pysh-using code.
     from .filters import filter, input, output, argument, option
+    from .filters import slurp
 
 
 def chunks(f: io.BufferedReader):
@@ -76,15 +77,6 @@ def split(input, *, lines=False):
 
 
 @pysh.filter
-@pysh.input(type='stream')
-@pysh.output(type='bytes')
-def read(input):
-    # Bash deletes trailing newlines from output in `$(...)`.
-    # See manual, 3.5.4 Command Substitution.
-    return input.read().rstrip(b'\n')
-
-
-@pysh.filter
 @pysh.input(type='stream', required=False)
 @pysh.output(type='stream')
 @pysh.argument()
@@ -122,11 +114,11 @@ def run(input, output, fmt, *args):
 #  [x] pipelines, with split
 #  [x] shwords
 #  [x] run
-#  [x] read
+#  [x] slurp
 #  [x] shwords for lists: `{!@}`
 #  [x] `run` accept input
 #  [x] `echo` builtin: `echo "$foo" | ...`
-#  [ ] `join` inverse of `split` (as `echo` is to `read`)
+#  [ ] `join` inverse of `split`
 #  [ ] redirect `2>/dev/null` and `2>&`; perhaps e.g.
 #      `cmd.run(..., _stderr=cmd.DEVNULL)` (and let other kwargs
 #      go to shwords)?
@@ -149,8 +141,8 @@ def test_pipeline():
     ) == open('/etc/shells', 'rb').read().rstrip(b"\n").split(b"\n")
 
     assert (
-        (cmd.run('git rev-parse {}', 'dbccdbe6f~2') | cmd.read())()
-        # sh { git rev-parse ${commitish} | read }
+        pysh.slurp(cmd.run('git rev-parse {}', 'dbccdbe6f~2'))
+        # sh { git rev-parse ${commitish} | slurp }
     ) == b'91a20bf6b4a72f1f84b2f57cf38b3f771dd35fda'
 
     # Input and output optional; check nothing blows up.
@@ -160,7 +152,7 @@ def test_pipeline():
 def test_echo():
     from . import cmd
     assert (
-        (cmd.echo(b'hello', b'world') | cmd.read())()
+        pysh.slurp(cmd.echo(b'hello', b'world'))
     ) == b'hello world'
 
 
@@ -173,13 +165,12 @@ def test_run():
         == [b'a515d0250', b'c90596c89', b'']
 
     assert (
-        (cmd.echo(b'hello') | cmd.run('tr h H') | cmd.read())()
-        # sh { echo hello | tr h H | read }
+        pysh.slurp(cmd.echo(b'hello') | cmd.run('tr h H'))
+        # sh { echo hello | tr h H | slurp }
     ) == b'Hello'
 
-    assert (
-        (cmd.run('git log --oneline --reverse')
-         | cmd.run('grep -m1 {}', 'yield')
-         | cmd.run('perl -lane {}', 'print $F[0]')
-         | cmd.read())()
+    assert pysh.slurp(
+        cmd.run('git log --oneline --reverse')
+        | cmd.run('grep -m1 {}', 'yield')
+        | cmd.run('perl -lane {}', 'print $F[0]')
     ) == b'91a20bf6b'
