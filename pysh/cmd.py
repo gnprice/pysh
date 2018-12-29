@@ -85,11 +85,13 @@ def read(input):
 
 
 @pysh.filter
-# input none
+@pysh.input(type='stream', required=False)
 @pysh.output(type='stream')
 @pysh.argument()
 @pysh.argument(n='*')
-def run(output, fmt, *args):
+def run(input, output, fmt, *args):
+    if input is not None:
+        raise NotImplementedError()
     cmd = shwords(fmt, *args)
     # Compare subprocess.run and Popen.communicate, in cpython:Lib/subprocess.py.
     with subprocess.Popen(
