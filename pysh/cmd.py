@@ -140,6 +140,9 @@ def test_pipeline():
         # sh { git rev-parse ${commitish} | read }
     ) == b'91a20bf6b4a72f1f84b2f57cf38b3f771dd35fda'
 
+    # Input and output optional; check nothing blows up.
+    cmd.devnull()()
+
 
 def test_echo():
     from . import cmd

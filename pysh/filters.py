@@ -30,9 +30,10 @@ class Filter:
         self.thunk = thunk
 
     def __call__(self):
-        if self.input.type != 'none':
+        if self.input.required and self.input.type != 'none':
             raise RuntimeError()
-        if self.output.type in ('none', 'iter', 'bytes'):
+        if (self.output.type in ('none', 'iter', 'bytes')
+              or not self.output.required):
             return self.thunk(None, None)
         elif self.output.type == 'stream':
             raise NotImplementedError()  # Return the pipe/stream.
