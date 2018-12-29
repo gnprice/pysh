@@ -91,25 +91,28 @@ def read(input):
 @pysh.argument(n='*')
 def run(input, output, fmt, *args):
     cmd = shwords(fmt, *args)
+
+    # Compare subprocess.run and Popen.communicate, in cpython:Lib/subprocess.py.
+    proc = subprocess.Popen(
+            cmd,
+            stdin=subprocess.DEVNULL if input is None else subprocess.PIPE,
+            stdout=subprocess.PIPE,
+    )
     if input is None:
         # Simplify in the case where no interleaved I/O is necessary.
-        # Compare subprocess.run and Popen.communicate, in cpython:Lib/subprocess.py.
-        with subprocess.Popen(
-                cmd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE) as proc:
-            # This mirrors what Popen.communicate does, except with a `.read()`
-            # expanded to pipeline chunks.
-            for chunk in chunks(proc.stdout):
-                output.write(chunk)
-            proc.stdout.close()
-            retcode = proc.wait()
+        # This mirrors what Popen.communicate does, except with a `.read()`
+        # expanded to pipeline chunks.
+        for chunk in chunks(proc.stdout):
+            output.write(chunk)
+        proc.stdout.close()
+        proc.wait()
     else:
-        with subprocess.Popen(
-                cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE) as proc:
-            # TODO this just exhausts our input, then starts passing it on.
-            inbuf = input.read()
-            outbuf, _ = proc.communicate(inbuf)
-            output.write(outbuf)
-            retcode = proc.returncode
+        # TODO this just exhausts our input, then starts passing it on.
+        inbuf = input.read()
+        outbuf, _ = proc.communicate(inbuf)
+        output.write(outbuf)
+
+    retcode = proc.returncode
     if retcode:
         raise subprocess.CalledProcessError(retcode, cmd)
 
