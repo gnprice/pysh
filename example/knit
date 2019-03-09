@@ -1,0 +1,74 @@
+#!/usr/bin/env python3
+#
+# Translated from the Bash script `knit.orig`.
+#
+# Setup: something like
+#   $ pip install --user click
+#   $ ln -s "${PYSH_WORKTREE}"/pysh ~/.local/lib/python3.7/site-packages/
+#
+# "TODO" comments mark things that could be improved in Pysh.
+
+import subprocess
+import sys
+
+import click
+# TODO clean up the imports
+from pysh import cmd
+from pysh.filters import slurp
+from pysh.words import shwords
+
+
+def die(msg):
+    print(msg, file=sys.stderr)
+    sys.exit(1)
+
+
+# These data structures would be different if writing in Python
+# in the first place.
+branch_names = []
+commit_ids = []
+
+def add_branch(name):
+    # TODO cleaner idiom here, to translate `primary || fallback`...
+    # perhaps return Optional[str]?
+    try:
+        commit_id = slurp(cmd.run('git rev-parse --verify --quiet {}', name))
+    except subprocess.CalledProcessError:
+        commit_id = slurp(
+            cmd.run('git rev-parse --verify --quiet origin/{}', name))
+        # TODO on failure, exit without spewing a traceback...
+        # *and yet* let add_branch caller decide to ignore
+
+    branch_names.append(name)
+    commit_ids.append(commit_id.decode('utf-8'))  # TODO :'-(
+
+
+KNOWN_HOSTS = ['dark-matter', 'brown-dwarf']
+
+@click.command()
+@click.argument("host")
+def main(host):
+    if host not in KNOWN_HOSTS:
+        die(f"unknown host: {host}")  # better: click error
+
+    # TODO cleaner idiom for exit status -> return bool
+    try: subprocess.check_call(shwords('git diff-index --quiet HEAD'))
+    except subprocess.CalledProcessError:
+        die("error: worktree not clean")
+
+    add_branch('master')
+    add_branch('datacomp')
+    try: add_branch(f"{host}.only")
+    except subprocess.CalledProcessError:
+        pass
+
+    # TODO cleaner idiom for running *without* capturing
+    # (I was actually surprised to find/remember that `cmd.run`
+    # doesn't do exactly that.)
+    subprocess.check_call(shwords("git checkout {}", commit_ids[0]))
+    subprocess.check_call(shwords("git merge {!@} -m {}",
+        commit_ids[1:], f"Temp merge for {host}: " + " ".join(branch_names[1:])))
+
+
+if __name__ == '__main__':
+    main()

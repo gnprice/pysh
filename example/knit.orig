@@ -1,0 +1,50 @@
+#!/bin/bash
+#
+# Originally written by Greg in 2019-01, for use in managing branches
+# in his personal dotfiles repo (and named `meta/knit` in that tree.)
+
+set -eu -o pipefail
+
+die() {
+    echo >&2 "${1}"
+    exit 1
+}
+
+usage() {
+    die "usage: ${0} HOST"
+}
+
+host="${1}"
+case "${host}" in
+    '')
+        usage;;
+    dark-matter|brown-dwarf)
+        ;;
+    *)
+        die "unknown host: ${host}";;
+esac
+
+if ! git diff-index --quiet HEAD; then
+    die "error: worktree not clean"
+fi
+
+branch_names=()
+commit_ids=()
+add_branch() {
+    name="${1}"
+    commit_id="$(
+      git rev-parse --verify --quiet "${name}" \
+      || git rev-parse --verify --quiet origin/"${name}"
+      )"
+    [ -n "${commit_id}" ] || return 1
+    branch_names+=( "${name}" )
+    commit_ids+=( "${commit_id}" )
+}
+
+add_branch master
+add_branch datacomp
+add_branch "${host}".only || :
+
+git checkout "${commit_ids[0]}"
+git merge "${commit_ids[@]:1}" \
+    -m "Temp merge for ${host}: ${branch_names[*]:1}"
