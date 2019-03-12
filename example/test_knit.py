@@ -9,7 +9,7 @@ import pytest
 THIS_DIR=os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, os.path.dirname(THIS_DIR))
 
-from pysh import check_cmd, cmd, shwords, slurp
+from pysh import check_cmd, cmd, shwords, slurp_cmd
 
 
 @pytest.fixture
@@ -58,10 +58,10 @@ def test_basic_happy():
 
     check_cmd("git log --graph --oneline --all @")
     parents = \
-        slurp(cmd.run("git log -n1 --format=%p @")).split(b" ")
+        slurp_cmd("git log -n1 --format=%p @").split(b" ")
     assert parents == [
-        slurp(cmd.run("git rev-parse --short master")),
-        slurp(cmd.run("git rev-parse --short datacomp")),
+        slurp_cmd("git rev-parse --short master"),
+        slurp_cmd("git rev-parse --short datacomp"),
     ]
 
 
@@ -75,8 +75,8 @@ def test_dirty():
         check_cmd("{} brown-dwarf", knit_script)
 
     check_cmd("git log --graph --oneline --all @")
-    assert slurp(cmd.run("git rev-parse @")) \
-        == slurp(cmd.run("git rev-parse master"))
+    assert slurp_cmd("git rev-parse @") \
+        == slurp_cmd("git rev-parse master")
 
 
 @pytest.mark.usefixtures("repo")
@@ -88,9 +88,9 @@ def test_originfallback():
     check_cmd("{} brown-dwarf", knit_script)
 
     check_cmd("git log --graph --oneline --all @")
-    assert slurp(cmd.run("git log -n1 --format=%p @")).split(b" ") == [
-        slurp(cmd.run("git rev-parse --short master")),
-        slurp(cmd.run("git rev-parse --short origin/datacomp")),
+    assert slurp_cmd("git log -n1 --format=%p @").split(b" ") == [
+        slurp_cmd("git rev-parse --short master"),
+        slurp_cmd("git rev-parse --short origin/datacomp"),
     ]
     
 
@@ -103,8 +103,8 @@ def test_fail_on_branch_missing():
         check_cmd("{} brown-dwarf", knit_script)
 
     check_cmd("git log --graph --oneline --all @")
-    assert slurp(cmd.run("git rev-parse @")) \
-        == slurp(cmd.run("git rev-parse master"))
+    assert slurp_cmd("git rev-parse @") \
+        == slurp_cmd("git rev-parse master")
 
 
 @pytest.mark.usefixtures("repo")
@@ -117,8 +117,8 @@ def test_include_optional():
     check_cmd("{} brown-dwarf", knit_script)
 
     check_cmd("git log --graph --oneline --all @")
-    assert slurp(cmd.run("git log -n1 --format=%p @")).split(b" ") == [
-        slurp(cmd.run("git rev-parse --short master")),
-        slurp(cmd.run("git rev-parse --short datacomp")),
-        slurp(cmd.run("git rev-parse --short brown-dwarf.only")),
+    assert slurp_cmd("git log -n1 --format=%p @").split(b" ") == [
+        slurp_cmd("git rev-parse --short master"),
+        slurp_cmd("git rev-parse --short datacomp"),
+        slurp_cmd("git rev-parse --short brown-dwarf.only"),
     ]
