@@ -12,7 +12,7 @@ import subprocess
 import sys
 
 import click
-from pysh import check_cmd, cmd, shwords, slurp_cmd
+from pysh import check_cmd, cmd, shwords, slurp_cmd, try_slurp_cmd
 
 
 def die(msg):
@@ -26,11 +26,8 @@ branch_names = []
 commit_ids = []
 
 def add_branch(name):
-    # TODO cleaner idiom here, to translate `primary || fallback`...
-    # perhaps return Optional[str]?
-    try:
-        commit_id = slurp_cmd('git rev-parse --verify --quiet {}', name)
-    except subprocess.CalledProcessError:
+    commit_id = try_slurp_cmd('git rev-parse --verify --quiet {}', name)
+    if commit_id is None:
         commit_id = slurp_cmd('git rev-parse --verify --quiet origin/{}', name)
         # TODO on failure, exit without spewing a traceback...
         # *and yet* let add_branch caller decide to ignore

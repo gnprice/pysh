@@ -3,6 +3,7 @@ Thin wrappers around `subprocess`, mainly adding `shwords`.
 '''
 
 import subprocess
+from typing import Optional
 
 from .words import shwords
 
@@ -10,7 +11,7 @@ from .words import shwords
 def check_cmd(fmt, *args,
               _stdin=None, _stdout=None, _stderr=None,
               _cwd=None, _timeout=None,
-              **kwargs):
+              **kwargs) -> None:
     '''
     Just like `subprocess.check_call`, but with `shwords`.
 
@@ -30,7 +31,7 @@ def check_cmd(fmt, *args,
 def slurp_cmd(fmt, *args,
               _stdin=None, _stderr=None,
               _cwd=None, _timeout=None,
-              **kwargs):
+              **kwargs) -> str:
     '''
     Run the command and capture output, stripping any trailing newlines.
 
@@ -48,3 +49,13 @@ def slurp_cmd(fmt, *args,
         timeout=_timeout,
     )
     return raw_output.rstrip(b'\n')
+
+
+def try_slurp_cmd(fmt, *args, **kwargs) -> Optional[str]:
+    '''
+    Just like `slurp_cmd`, but on failure returns None rather than raise.
+    '''
+    try:
+        return slurp_cmd(fmt, *args, **kwargs)
+    except subprocess.CalledProcessError:
+        return None
