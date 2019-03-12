@@ -12,7 +12,7 @@ import subprocess
 import sys
 
 import click
-from pysh import check_cmd, cmd, shwords, slurp_cmd, try_slurp_cmd
+from pysh import check_cmd, cmd, shwords, slurp_cmd, try_cmd, try_slurp_cmd
 
 
 def die(msg):
@@ -44,9 +44,7 @@ def main(host):
     if host not in KNOWN_HOSTS:
         die(f"unknown host: {host}")  # better: click error
 
-    # TODO cleaner idiom for exit status -> return bool
-    try: check_cmd('git diff-index --quiet HEAD')
-    except subprocess.CalledProcessError:
+    if not try_cmd('git diff-index --quiet HEAD'):
         die("error: worktree not clean")
 
     add_branch('master')

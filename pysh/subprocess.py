@@ -28,6 +28,17 @@ def check_cmd(fmt, *args,
     )
 
 
+def try_cmd(fmt, *args, **kwargs) -> bool:
+    '''
+    Just like `check_cmd`, but returns success/failure rather than raise.
+    '''
+    try:
+        check_cmd(fmt, *args, **kwargs)
+    except subprocess.CalledProcessError:
+        return False
+    return True
+
+
 def slurp_cmd(fmt, *args,
               _stdin=None, _stderr=None,
               _cwd=None, _timeout=None,
