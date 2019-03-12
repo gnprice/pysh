@@ -12,10 +12,7 @@ import subprocess
 import sys
 
 import click
-# TODO clean up the imports
-from pysh import cmd
-from pysh.filters import slurp
-from pysh.words import shwords
+from pysh import cmd, shwords, slurp
 
 
 def die(msg):

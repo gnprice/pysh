@@ -9,9 +9,7 @@ import pytest
 THIS_DIR=os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, os.path.dirname(THIS_DIR))
 
-from pysh import cmd
-from pysh.filters import slurp
-from pysh.words import shwords
+from pysh import cmd, shwords, slurp
 
 
 @pytest.fixture
