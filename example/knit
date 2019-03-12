@@ -12,7 +12,7 @@ import subprocess
 import sys
 
 import click
-from pysh import cmd, shwords, slurp
+from pysh import check_cmd, cmd, shwords, slurp
 
 
 def die(msg):
@@ -49,7 +49,7 @@ def main(host):
         die(f"unknown host: {host}")  # better: click error
 
     # TODO cleaner idiom for exit status -> return bool
-    try: subprocess.check_call(shwords('git diff-index --quiet HEAD'))
+    try: check_cmd('git diff-index --quiet HEAD')
     except subprocess.CalledProcessError:
         die("error: worktree not clean")
 
@@ -59,12 +59,9 @@ def main(host):
     except subprocess.CalledProcessError:
         pass
 
-    # TODO cleaner idiom for running *without* capturing
-    # (I was actually surprised to find/remember that `cmd.run`
-    # doesn't do exactly that.)
-    subprocess.check_call(shwords("git checkout {}", commit_ids[0]))
-    subprocess.check_call(shwords("git merge {!@} -m {}",
-        commit_ids[1:], f"Temp merge for {host}: " + " ".join(branch_names[1:])))
+    check_cmd("git checkout {}", commit_ids[0])
+    check_cmd("git merge {!@} -m {}",
+        commit_ids[1:], f"Temp merge for {host}: " + " ".join(branch_names[1:]))
 
 
 if __name__ == '__main__':

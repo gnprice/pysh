@@ -9,7 +9,7 @@ import pytest
 THIS_DIR=os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, os.path.dirname(THIS_DIR))
 
-from pysh import cmd, shwords, slurp
+from pysh import check_cmd, cmd, shwords, slurp
 
 
 @pytest.fixture
@@ -23,15 +23,11 @@ def chtempdir():
         os.chdir(oldcwd)
 
 
-def run(cmd, *args):
-    subprocess.check_call(shwords(cmd, *args))
-
-
 def example_ci(name):
     with open(name, "w") as f:
         f.write(f"{name}\n")
-    run("git add {}", name)
-    run("git commit -m {}", name)
+    check_cmd("git add {}", name)
+    check_cmd("git commit -m {}", name)
 
 
 @pytest.fixture
@@ -43,12 +39,12 @@ def repo(chtempdir):
     |/
     * a
     """
-    run("git init")
+    check_cmd("git init")
     example_ci("a")
     example_ci("m")
-    run("git checkout @^ -b datacomp")
+    check_cmd("git checkout @^ -b datacomp")
     example_ci("d")
-    run("git checkout master")
+    check_cmd("git checkout master")
 
 
 knit_script = os.path.join(THIS_DIR, "knit")
@@ -56,11 +52,11 @@ knit_script = os.path.join(THIS_DIR, "knit")
 
 @pytest.mark.usefixtures("repo")
 def test_basic_happy():
-    run("git log --graph --oneline --all @")
+    check_cmd("git log --graph --oneline --all @")
 
-    run("{} brown-dwarf", knit_script)
+    check_cmd("{} brown-dwarf", knit_script)
 
-    run("git log --graph --oneline --all @")
+    check_cmd("git log --graph --oneline --all @")
     parents = \
         slurp(cmd.run("git log -n1 --format=%p @")).split(b" ")
     assert parents == [
@@ -73,25 +69,25 @@ def test_basic_happy():
 def test_dirty():
     with open("a", "a") as f:
         f.write("aa\n")
-    run("git log --graph --oneline --all @")
+    check_cmd("git log --graph --oneline --all @")
 
     with pytest.raises(subprocess.CalledProcessError):
-        run("{} brown-dwarf", knit_script)
+        check_cmd("{} brown-dwarf", knit_script)
 
-    run("git log --graph --oneline --all @")
+    check_cmd("git log --graph --oneline --all @")
     assert slurp(cmd.run("git rev-parse @")) \
         == slurp(cmd.run("git rev-parse master"))
 
 
 @pytest.mark.usefixtures("repo")
 def test_originfallback():
-    run("git update-ref refs/remotes/origin/datacomp datacomp")
-    run("git update-ref -d refs/heads/datacomp")
-    run("git log --graph --oneline --all @")
+    check_cmd("git update-ref refs/remotes/origin/datacomp datacomp")
+    check_cmd("git update-ref -d refs/heads/datacomp")
+    check_cmd("git log --graph --oneline --all @")
 
-    run("{} brown-dwarf", knit_script)
+    check_cmd("{} brown-dwarf", knit_script)
 
-    run("git log --graph --oneline --all @")
+    check_cmd("git log --graph --oneline --all @")
     assert slurp(cmd.run("git log -n1 --format=%p @")).split(b" ") == [
         slurp(cmd.run("git rev-parse --short master")),
         slurp(cmd.run("git rev-parse --short origin/datacomp")),
@@ -100,27 +96,27 @@ def test_originfallback():
 
 @pytest.mark.usefixtures("repo")
 def test_fail_on_branch_missing():
-    run("git update-ref -d refs/heads/datacomp")
-    run("git log --graph --oneline --all @")
+    check_cmd("git update-ref -d refs/heads/datacomp")
+    check_cmd("git log --graph --oneline --all @")
 
     with pytest.raises(subprocess.CalledProcessError):
-        run("{} brown-dwarf", knit_script)
+        check_cmd("{} brown-dwarf", knit_script)
 
-    run("git log --graph --oneline --all @")
+    check_cmd("git log --graph --oneline --all @")
     assert slurp(cmd.run("git rev-parse @")) \
         == slurp(cmd.run("git rev-parse master"))
 
 
 @pytest.mark.usefixtures("repo")
 def test_include_optional():
-    run("git checkout @^ -b brown-dwarf.only")
+    check_cmd("git checkout @^ -b brown-dwarf.only")
     example_ci("b")
-    run("git checkout master")
-    run("git log --graph --oneline --all @")
+    check_cmd("git checkout master")
+    check_cmd("git log --graph --oneline --all @")
 
-    run("{} brown-dwarf", knit_script)
+    check_cmd("{} brown-dwarf", knit_script)
 
-    run("git log --graph --oneline --all @")
+    check_cmd("git log --graph --oneline --all @")
     assert slurp(cmd.run("git log -n1 --format=%p @")).split(b" ") == [
         slurp(cmd.run("git rev-parse --short master")),
         slurp(cmd.run("git rev-parse --short datacomp")),
