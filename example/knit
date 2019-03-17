@@ -16,11 +16,6 @@ from click import ClickException
 from pysh import check_cmd, cmd, shwords, slurp_cmd, try_cmd, try_slurp_cmd
 
 
-def die(msg):
-    print(msg, file=sys.stderr)
-    sys.exit(1)
-
-
 class MissingBranchException(ClickException):
     def __init__(self, branch_name):
         super().__init__(f"No such branch: {branch_name}")
@@ -48,7 +43,7 @@ KNOWN_HOSTS = ['dark-matter', 'brown-dwarf']
 @click.argument("host", metavar='HOST', type=click.Choice(KNOWN_HOSTS))
 def main(host):
     if not try_cmd('git diff-index --quiet HEAD'):
-        die("error: worktree not clean")
+        raise ClickException("worktree not clean")
 
     add_branch('master')
     add_branch('datacomp')
