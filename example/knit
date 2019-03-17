@@ -45,11 +45,8 @@ def add_branch(name):
 KNOWN_HOSTS = ['dark-matter', 'brown-dwarf']
 
 @click.command()
-@click.argument("host")
+@click.argument("host", metavar='HOST', type=click.Choice(KNOWN_HOSTS))
 def main(host):
-    if host not in KNOWN_HOSTS:
-        die(f"unknown host: {host}")  # better: click error
-
     if not try_cmd('git diff-index --quiet HEAD'):
         die("error: worktree not clean")
 
