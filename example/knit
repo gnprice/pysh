@@ -12,12 +12,18 @@ import subprocess
 import sys
 
 import click
+from click import ClickException
 from pysh import check_cmd, cmd, shwords, slurp_cmd, try_cmd, try_slurp_cmd
 
 
 def die(msg):
     print(msg, file=sys.stderr)
     sys.exit(1)
+
+
+class MissingBranchException(ClickException):
+    def __init__(self, branch_name):
+        super().__init__(f"No such branch: {branch_name}")
 
 
 # These data structures would be different if writing in Python
@@ -28,9 +34,9 @@ commit_ids = []
 def add_branch(name):
     commit_id = try_slurp_cmd('git rev-parse --verify --quiet {}', name)
     if commit_id is None:
-        commit_id = slurp_cmd('git rev-parse --verify --quiet origin/{}', name)
-        # TODO on failure, exit without spewing a traceback...
-        # *and yet* let add_branch caller decide to ignore
+        commit_id = try_slurp_cmd('git rev-parse --verify --quiet origin/{}', name)
+    if commit_id is None:
+        raise MissingBranchException(name)
 
     branch_names.append(name)
     commit_ids.append(commit_id.decode('utf-8'))  # TODO :'-(
@@ -50,7 +56,7 @@ def main(host):
     add_branch('master')
     add_branch('datacomp')
     try: add_branch(f"{host}.only")
-    except subprocess.CalledProcessError:
+    except MissingBranchException:
         pass
 
     check_cmd("git checkout {}", commit_ids[0])
