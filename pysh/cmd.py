@@ -100,6 +100,10 @@ def run(input, output, fmt, *args):
         proc.wait()
     else:
         # TODO this just exhausts our input, then starts passing it on.
+        #
+        # This won't do for a full solution; but it's plenty for replacing
+        # lots of shell scripts, where the data handled in pipes is not too
+        # many kilobytes.
         inbuf = input.read()
         outbuf, _ = proc.communicate(inbuf)
         output.write(outbuf)
