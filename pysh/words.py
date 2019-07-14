@@ -1,5 +1,6 @@
 import re
 import _string
+import sys
 
 
 def get_field(field_name, args, kwargs):
@@ -97,6 +98,18 @@ def shwords(format_string, *args, **kwargs):
   return result
 
 
+def shwords_f(format_string):
+  '''
+  Process (almost) like an f-string, but with splitting like `shwords`.
+
+  NB unlike an f-string, only the caller's locals are available;
+  not globals, and enclosing scopes are complicated.
+  '''
+  # TODO perhaps add globals; nonlocals seem harder but probably matter less
+  namespace = sys._getframe(1).f_locals
+  return shwords(format_string, **namespace)
+
+
 def test_conversions():
   import pytest
   with pytest.raises(ValueError):
@@ -134,3 +147,36 @@ def test_within_word():
   assert shwords('{basedir}/deployments/{deploy_id}/bin/start',
                  basedir='/srv/app', deploy_id='0f1e2d3c') \
     == ['/srv/app/deployments/0f1e2d3c/bin/start']
+
+def test_locals():
+  import pytest
+  l = ['a', 'b']
+  assert shwords_f('touch {l!@}') \
+    == ['touch', 'a', 'b']
+  assert shwords_f('touch {l[1]}') \
+    == ['touch', 'b']
+  assert shwords_f('echo {pytest.__name__}') \
+    == ['echo', 'pytest']
+
+  # Known limitation: locals only, no globals...
+  with pytest.raises(KeyError, match='sys'):
+    shwords_f('echo {sys}')
+  # (unlike real, compiler-assisted f-strings)
+  assert f'{sys}' \
+    == "<module 'sys' (built-in)>"
+
+  # ... and enclosing scopes' locals are complicated.
+  def inner1():
+    with pytest.raises(KeyError):
+      return shwords_f('touch {l!@}')
+  inner1()
+  def inner2():
+    l
+    assert shwords_f('touch {l!@}') \
+      == ['touch', 'a', 'b']
+  inner2()
+  def inner3():
+    nonlocal l
+    assert shwords_f('touch {l!@}') \
+      == ['touch', 'a', 'b']
+  inner3()
