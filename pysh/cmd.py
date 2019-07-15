@@ -41,8 +41,8 @@ def devnull(input, output):
 # input none
 @pysh.output(type='stream')
 @pysh.argument(n='*', type=bytes)
-def echo(output, *words):
-    output.write(b' '.join(words) + b'\n')
+async def echo(output, *words):
+    await output.write(b' '.join(words) + b'\n')
 
 
 @pysh.filter

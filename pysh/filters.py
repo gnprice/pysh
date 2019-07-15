@@ -1,16 +1,31 @@
+import asyncio
 from collections import namedtuple
 import io
 from typing import Any, Callable, List, NamedTuple
 
 
+class FakeAsyncBytesIO:
+    def __init__(self):
+        self._buf = io.BytesIO()
+
+    async def write(self, data):
+        self._buf.write(data)
+
+    async def read(self):
+        return self._buf.read()
+
+    def seek(self, pos):
+        self._buf.seek(pos)
+
+
 def pipe_by_stream(left: 'Filter', right: 'Filter'):
     # TODO this exhausts left, then starts right.
     # This is where we really need async.
-    def piped(input, output):
-        buf = io.BytesIO()
-        left.thunk(input, buf)
+    async def piped(input, output):
+        buf = FakeAsyncBytesIO()
+        await left.thunk(input, buf)
         buf.seek(0)
-        return right.thunk(buf, output)
+        return await right.thunk(buf, output)
     return piped
 
 
@@ -60,8 +75,10 @@ class Filter:
         return Filter(self.input, other.output, thunk)
 
 
-slurp_filter = Filter(IoSpec('stream'), IoSpec('bytes'),
-                     lambda input, _: input.read().rstrip(b'\n'))
+async def slurp_filter_thunk(input, output):
+    return (await input.read()).rstrip(b'\n')
+
+slurp_filter = Filter(IoSpec('stream'), IoSpec('bytes'), slurp_filter_thunk)
 
 def slurp(filter):
     '''
@@ -73,7 +90,7 @@ def slurp(filter):
     See also `pysh.subprocess.slurp_cmd`.
     '''
     # For reference on `$(...)` see Bash manual, 3.5.4 Command Substitution.
-    return (filter | slurp_filter)()
+    return asyncio.run((filter | slurp_filter)())
 
 
 Argspec = namedtuple('Argspec', ['type', 'n'])
