@@ -31,7 +31,7 @@ def pipe_by_stream(left: 'Filter', right: 'Filter'):
         buf = FakeAsyncBytesIO()
         await left.thunk(input, buf)
         buf.seek(0)
-        return await right.thunk(buf, output)
+        return right.thunk(buf, output)
     return piped
 
 
@@ -102,7 +102,7 @@ def slurp(filter):
 def list_sync(filter):
     async def inner():
         result = []
-        async for item in filter():
+        async for item in await filter():
             result.append(item)
         return result
     return asyncio.run(inner())
