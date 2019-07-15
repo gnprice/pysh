@@ -4,6 +4,7 @@ Usage:
 
 '''
 
+import asyncio
 import io
 import subprocess
 
@@ -14,10 +15,24 @@ class pysh:
     # Absurd hack to get the same names `pysh.filter` etc. below
     # as in normal pysh-using code.
     from .filters import filter, input, output, argument, option
-    from .filters import slurp
+    from .filters import slurp, list_sync
 
 
-def chunks(f: io.BufferedReader):
+CHUNK_MAX_BYTES = 64 * 1024
+
+async def chunks(f: asyncio.StreamReader):
+    '''
+    Async generator for the contents of `f`, just adapting the interface.
+
+    The underlying `StreamReader.read` blocks only when the buffer is empty,
+    and so do we.
+    '''
+    chunk = await f.read(CHUNK_MAX_BYTES)
+    while chunk:
+        yield chunk
+        chunk = await f.read(CHUNK_MAX_BYTES)
+
+def chunks_sync(f: io.BufferedReader):
     '''Generator for the contents of `f`, yielding once per underlying read.'''
     chunk = f.read1()
     while chunk:
@@ -28,9 +43,9 @@ def chunks(f: io.BufferedReader):
 @pysh.filter
 @pysh.input(type='stream', required=False)
 @pysh.output(type='stream', required=False)
-def devnull(input, output):
+async def devnull(input, output):
     if output is not None:
-        output.close()
+        await output.close()
 
     if input is not None:
         for _ in chunks(input):
@@ -49,28 +64,29 @@ async def echo(output, *words):
 # input none
 @pysh.output(type='stream')
 @pysh.argument(n='*', type='filename')
-def cat(output, *filenames):
+async def cat(output, *filenames):
     for filename in filenames:
         with open(filename, 'rb') as f:
-            for chunk in chunks(f):
-                output.write(chunk)
+            for chunk in chunks_sync(f):
+                await output.write(chunk)
 
 
 @pysh.filter
 @pysh.input(type='stream')
 @pysh.output(type='iter')
 @pysh.option('-l', '--lines', type=bool)
-def split(input, *, lines=False):
+async def split(input, *, lines=False):
     delimiter = b'\n' if lines else None
     fragment = b''
-    for chunk in chunks(input):
+    async for chunk in chunks(input):
         assert chunk
         pieces = chunk.split(delimiter)
         if len(pieces) == 1:
             fragment += pieces[0]
         else:
             yield fragment + pieces[0]
-            yield from pieces[1:-1]
+            for piece in pieces[1:-1]:
+                yield piece
             fragment = pieces[-1]
     if fragment:
         yield fragment
@@ -139,7 +155,7 @@ def run(input, output, fmt, *args):
 def test_pipeline():
     from . import cmd
 
-    assert list(
+    assert pysh.list_sync(
         cmd.cat(b'/etc/shells') | cmd.split(lines=True)
         # sh { cat /etc/shells | split -l }
     ) == open('/etc/shells', 'rb').read().rstrip(b"\n").split(b"\n")

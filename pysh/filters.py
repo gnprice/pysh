@@ -14,8 +14,14 @@ class FakeAsyncBytesIO:
     async def read(self):
         return self._buf.read()
 
+    async def read1(self):
+        return self._buf.read1()
+
     def seek(self, pos):
         self._buf.seek(pos)
+
+    async def close(self):
+        self._buf.close()
 
 
 def pipe_by_stream(left: 'Filter', right: 'Filter'):
@@ -91,6 +97,15 @@ def slurp(filter):
     '''
     # For reference on `$(...)` see Bash manual, 3.5.4 Command Substitution.
     return asyncio.run((filter | slurp_filter)())
+
+
+def list_sync(filter):
+    async def inner():
+        result = []
+        async for item in filter():
+            result.append(item)
+        return result
+    return asyncio.run(inner())
 
 
 Argspec = namedtuple('Argspec', ['type', 'n'])
