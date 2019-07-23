@@ -5,7 +5,13 @@ Thin wrappers around `subprocess`, mainly adding `shwords`.
 import subprocess
 from typing import Optional
 
-from .words import shwords
+from .words import caller_namespace, shwords
+
+
+# There's some code duplication in these *_f functions, especially
+# try_cmd_f and try_slurp_cmd_f.  Would be nice to refactor that
+# away... but not if it makes the code significantly more complex to
+# understand, and that seems hard to avoid.
 
 
 def check_cmd(fmt, *args,
@@ -28,12 +34,42 @@ def check_cmd(fmt, *args,
     )
 
 
+def check_cmd_f(fmt, **kwargs) -> None:
+    '''
+    Just like `check_cmd`, but with `shwords_f` instead of `shwords`.
+
+    This means `fmt` is processed much like an f-string, with access
+    to the caller's locals.  See `shwords_f` for details.
+
+    Also, unlike `check_cmd` all keyword arguments are passed straight
+    through to `subprocess.check_call`.
+    '''
+    subprocess.check_call(
+        shwords(fmt, **caller_namespace()),
+        **kwargs,
+    )
+
+
 def try_cmd(fmt, *args, **kwargs) -> bool:
     '''
     Just like `check_cmd`, but returns success/failure rather than raise.
     '''
     try:
         check_cmd(fmt, *args, **kwargs)
+    except subprocess.CalledProcessError:
+        return False
+    return True
+
+
+def try_cmd_f(fmt, **kwargs) -> bool:
+    '''
+    Just like `check_cmd_f`, but returns success/failure rather than raise.
+    '''
+    try:
+        subprocess.check_call(
+            shwords(fmt, **caller_namespace()),
+            **kwargs,
+        )
     except subprocess.CalledProcessError:
         return False
     return True
@@ -62,11 +98,39 @@ def slurp_cmd(fmt, *args,
     return raw_output.rstrip(b'\n')
 
 
+def slurp_cmd_f(fmt, **kwargs) -> str:
+    '''
+    Just like `slurp_cmd`, but with `shwords_f` instead of `shwords`.
+
+    Also, like `check_cmd_f` in contrast to `check_cmd`, all keyword
+    arguments are passed straight through to `subprocess.check_output`.
+    '''
+    raw_output = subprocess.check_output(
+        shwords(fmt, **caller_namespace()),
+        **kwargs,
+    )
+    return raw_output.rstrip(b'\n')
+
+
 def try_slurp_cmd(fmt, *args, **kwargs) -> Optional[str]:
     '''
     Just like `slurp_cmd`, but on failure returns None rather than raise.
     '''
     try:
         return slurp_cmd(fmt, *args, **kwargs)
+    except subprocess.CalledProcessError:
+        return None
+
+
+def try_slurp_cmd_f(fmt, **kwargs) -> Optional[str]:
+    '''
+    Just like `slurp_cmd_f`, but on failure returns None rather than raise.
+    '''
+    try:
+        raw_output = subprocess.check_output(
+            shwords(fmt, **caller_namespace()),
+            **kwargs,
+        )
+        return raw_output.rstrip(b'\n')
     except subprocess.CalledProcessError:
         return None

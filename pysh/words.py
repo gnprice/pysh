@@ -98,6 +98,24 @@ def shwords(format_string, *args, **kwargs):
   return result
 
 
+def caller_namespace(caller_depth=2):
+  '''
+  Get the names available in an ancestor frame, for emulating f-strings.
+
+  This gets the ancestor's locals; but unlike actual f-strings, no
+  globals, and enclosing scopes are complicated.
+
+  By default, applies to the caller's caller; so another function can
+  call this one to get at its own caller's locals.  In general, applies
+  to the frame `caller_depth` many calls below itself.
+
+  By specification this function is quite magical, and makes its
+  caller quite magical.  Use responsibly.
+  '''
+  # TODO perhaps add globals; nonlocals seem harder but probably matter less
+  return sys._getframe(caller_depth).f_locals
+
+
 def shwords_f(format_string):
   '''
   Process (almost) like an f-string, but with splitting like `shwords`.
@@ -105,8 +123,7 @@ def shwords_f(format_string):
   NB unlike an f-string, only the caller's locals are available;
   not globals, and enclosing scopes are complicated.
   '''
-  # TODO perhaps add globals; nonlocals seem harder but probably matter less
-  namespace = sys._getframe(1).f_locals
+  namespace = caller_namespace()
   return shwords(format_string, **namespace)
 
 

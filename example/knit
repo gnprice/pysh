@@ -10,7 +10,7 @@
 
 import click
 from click import ClickException
-from pysh import check_cmd, try_cmd, try_slurp_cmd
+from pysh import check_cmd, try_cmd, try_slurp_cmd_f
 
 
 class MissingBranchException(ClickException):
@@ -24,9 +24,9 @@ branch_names = []
 commit_ids = []
 
 def add_branch(name):
-    commit_id = try_slurp_cmd('git rev-parse --verify --quiet {}', name)
+    commit_id = try_slurp_cmd_f('git rev-parse --verify --quiet {name}')
     if commit_id is None:
-        commit_id = try_slurp_cmd('git rev-parse --verify --quiet origin/{}', name)
+        commit_id = try_slurp_cmd_f('git rev-parse --verify --quiet origin/{name}')
     if commit_id is None:
         raise MissingBranchException(name)
 
@@ -48,7 +48,7 @@ def main(host):
     except MissingBranchException:
         pass
 
-    check_cmd("git checkout {}", commit_ids[0])
+    check_cmd("git checkout {}", commit_ids[0])  # TODO f-style on global
     check_cmd("git merge {!@} -m {}",
         commit_ids[1:], f"Temp merge for {host}: " + " ".join(branch_names[1:]))
 
