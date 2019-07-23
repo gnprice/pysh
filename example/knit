@@ -8,12 +8,9 @@
 #
 # "TODO" comments mark things that could be improved in Pysh.
 
-import subprocess
-import sys
-
 import click
 from click import ClickException
-from pysh import check_cmd, cmd, shwords, slurp_cmd, try_cmd, try_slurp_cmd
+from pysh import check_cmd, try_cmd, try_slurp_cmd
 
 
 class MissingBranchException(ClickException):
