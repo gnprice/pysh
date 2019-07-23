@@ -1,5 +1,55 @@
 '''
 Thin wrappers around `subprocess`, mainly adding `shwords`.
+
+
+Check vs. slurp
+===============
+
+The `check_cmd` family:
+
+  check_cmd  check_cmd_f  try_cmd        try_cmd_f
+
+is appropriate for running a command for side effects, or for its
+exit status.  These functions wrap `subprocess.check_call`, and
+return `None` or `bool`.
+
+
+The `slurp_cmd` family:
+
+  slurp_cmd  slurp_cmd_f  try_slurp_cmd  try_slurp_cmd_f
+
+is appropriate for running a command for its output, potentially in
+addition to its side effects or exit status.  These functions wrap
+`subprocess.check_output`; and they strip any trailing newlines,
+which matches the behavior of `$(...)` in Bash and fits nicely with
+conventional semantics for Unix CLI tools.  They return `str` or
+`Optional[str]`.
+
+
+Try vs. no try
+==============
+
+Within each family, the "try" variants:
+
+  try_cmd    try_cmd_f    try_slurp_cmd  try_slurp_cmd_f
+
+are appropriate when the command's failure is an expected condition.
+They indicate failure in the return value, without raising an
+exception.  The non-"try" variants:
+
+  check_cmd  check_cmd_f  slurp_cmd      slurp_cmd_f
+
+raise a `subprocess.CalledProcessError` if the command fails.
+
+
+F-string style
+==============
+
+Within each family, the `_f` variants process the command format
+string like `shwords_f`, similar to an f-string.
+
+The plain, non-`_f` variants process the command format string like
+`shwords`.
 '''
 
 import subprocess
