@@ -1,0 +1,81 @@
+#!/usr/bin/env python3
+#
+# Translated from the Bash script `tsort-modules.orig`.
+
+import json
+import os.path
+from typing import *
+
+import click
+from pysh import check_cmd, check_cmd_f, slurp_cmd
+
+this_file = os.path.realpath(__file__)
+rootdir = os.path.join(this_file, '../..')
+
+bindir = f'{rootdir}/node_modules/.bin'
+
+
+@click.group()
+def main() -> None:
+    pass
+
+
+def import_pairs() -> List[Tuple[str, str]]:
+    sources = []  # WORK HERE glob f'{rootdir}/src/**/*.js'
+    imports_json = slurp_cmd(  # TODO f-style global
+        '{}/flow get-imports --json {!@}', bindir, sources)
+    results = []
+    for m in json.loads(imports_json):
+        for r in m['requirements']:
+            import_ = m['import']
+            # WORK HERE ... perhaps literal `jq` first?
+
+    return results
+
+
+@main.command(name='pairs')
+def print_import_pairs() -> None:
+    for imp, path in import_pairs():
+        print(imp, path)
+
+
+def sorted_files():
+    # WORK HERE
+    # print_import_pairs() | check_cmd('tsort')
+    pass
+
+
+@main.command(name='list')
+def sorted_ourfiles():
+    # Replace `grep` with pure Python where it's on a stream.
+    files = [f for f in sorted_files()
+             if f.startswith('src/') and f.endswith('js')]
+    # But on a bunch of files, real `grep` is much cleaner.
+    check_cmd_f('grep -l @flow -- {files!@}')
+
+
+# with_flow
+
+
+# todo
+
+
+@main.command()
+def depends(filename):
+    for imp, path in import_pairs():
+        if path == filename:
+            print(imp)
+
+
+@main.command()
+def rdepends(filename):
+    for imp, path in import_pairs():
+        if imp == filename:
+            print(path)
+
+
+# number_lines
+
+
+if __name__ == '__main__':
+    main()
