@@ -81,7 +81,7 @@ def split(input, *, lines=False):
 @pysh.output(type='stream')
 @pysh.argument()
 @pysh.argument(n='*')
-def run(input, output, fmt, *args):
+def run(input, output, fmt, *args, _check=True, _stderr=None):
     cmd = shwords(fmt, *args)
 
     # Compare subprocess.run and Popen.communicate, in cpython:Lib/subprocess.py.
@@ -89,6 +89,7 @@ def run(input, output, fmt, *args):
             cmd,
             stdin=subprocess.DEVNULL if input is None else subprocess.PIPE,
             stdout=subprocess.PIPE,
+            stderr=_stderr,
     )
     if input is None:
         # Simplify in the case where no interleaved I/O is necessary.
@@ -108,9 +109,10 @@ def run(input, output, fmt, *args):
         outbuf, _ = proc.communicate(inbuf)
         output.write(outbuf)
 
-    retcode = proc.returncode
-    if retcode:
-        raise subprocess.CalledProcessError(retcode, cmd)
+    if _check:
+        retcode = proc.returncode
+        if retcode:
+            raise subprocess.CalledProcessError(retcode, cmd)
 
 
 # TODO -- Features needed for translating everyday shell scripts without bloat.
@@ -123,7 +125,7 @@ def run(input, output, fmt, *args):
 #  [x] `run` accept input
 #  [x] `echo` builtin: `echo "$foo" | ...`
 #  [ ] `join` inverse of `split`
-#  [ ] redirect `2>/dev/null` and `2>&`; perhaps e.g.
+#  [x] redirect `2>/dev/null` and `2>&`; perhaps e.g.
 #      `cmd.run(..., _stderr=cmd.DEVNULL)` (and let other kwargs
 #      go to shwords)?
 #  [ ] globs (check if stdlib glob is enough)
