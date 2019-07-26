@@ -2,15 +2,23 @@
 #
 # Translated from the Bash script `tsort-modules.orig`.
 
+from glob import glob, escape as glob_escape
 import json
 import os.path
+import subprocess
+import sys
 from typing import *
 
 import click
-from pysh import check_cmd, check_cmd_f, slurp_cmd
+import pysh
+from pysh import cmd, check_cmd, check_cmd_f, slurp, slurp_cmd
 
-this_file = os.path.realpath(__file__)
-rootdir = os.path.join(this_file, '../..')
+
+# Original script behaved like this:
+#   this_file = os.path.realpath(__file__)
+#   rootdir = os.path.join(this_file, '../..')
+# but this is more convenient to experiment with:
+rootdir = os.getcwd()
 
 bindir = f'{rootdir}/node_modules/.bin'
 
@@ -20,17 +28,21 @@ def main() -> None:
     pass
 
 
-def import_pairs() -> List[Tuple[str, str]]:
-    sources = []  # WORK HERE glob f'{rootdir}/src/**/*.js'
-    imports_json = slurp_cmd(  # TODO f-style global
-        '{}/flow get-imports --json {!@}', bindir, sources)
-    results = []
-    for m in json.loads(imports_json):
-        for r in m['requirements']:
-            import_ = m['import']
-            # WORK HERE ... perhaps literal `jq` first?
-
-    return results
+def import_pairs() -> Iterator[Tuple[str, str]]:
+    # TODO glob+format similar to shwords's split+format
+    sources = glob('{}/src/**/*.js'.format(glob_escape(rootdir)),
+                   recursive=True)
+    imports_str = os.fsdecode(slurp(  # TODO stream to iterator
+        cmd.run('{}/flow get-imports --json {!@}',  # TODO f-style global
+                bindir, sources)
+        # TODO turn some or all of this `jq` into Python in pipeline...
+        | cmd.run('jq -r {}', f'''
+                  .[] | .requirements[] | [.import, .path]
+                  | map(ltrimstr("{rootdir}/")) | join(" ") ''')
+    ))
+    # TODO ... and also avoid this bit of crude parsing
+    for line in imports_str.split('\n'):
+        yield tuple(line.split(' ', 2))
 
 
 @main.command(name='pairs')
@@ -39,10 +51,21 @@ def print_import_pairs() -> None:
         print(imp, path)
 
 
-def sorted_files():
-    # WORK HERE
-    # print_import_pairs() | check_cmd('tsort')
-    pass
+def sorted_files() -> Iterator[Tuple[str, str]]:
+    # TODO unify/dedupe this with print_import_pairs above
+    @pysh.filter
+    @pysh.output(type='stream')
+    def _print_import_pairs(output):
+        for imp, path in import_pairs():
+            output.write(os.fsencode('{} {}\n'.format(imp, path)))
+
+    # TODO replace slurp+split with streaming lines
+    sorted_str = os.fsdecode(slurp(
+        _print_import_pairs()
+        # TODO re-export DEVNULL etc., to avoid `import subprocess`
+        | cmd.run('tsort', _check=False, _stderr=subprocess.DEVNULL)
+    ))
+    return sorted_str.split('\n')
 
 
 @main.command(name='list')
@@ -51,16 +74,40 @@ def sorted_ourfiles():
     files = [f for f in sorted_files()
              if f.startswith('src/') and f.endswith('js')]
     # But on a bunch of files, real `grep` is much cleaner.
+    # TODO don't dump traceback on SIGPIPE, e.g. `tsort-modules list | head`
     check_cmd_f('grep -l @flow -- {files!@}')
 
 
-# with_flow
+def number_lines():
+    # TODO some syntax to escape/quote spaces
+    return cmd.run('nl -ba -nln -w3 -s{}', ' ')
 
 
-# todo
+def with_flow():
+    files = [f for f in sorted_files()
+             if f.startswith('src/') and f.endswith('js')]
+    return cmd.run('grep @flow -- {!@}', files)
+
+
+@main.command(name='flow')
+def with_flow_numbered():
+    (
+        with_flow() | number_lines()
+    # TODO give this a less internal-looking spelling
+    ).thunk(None, sys.stdout.buffer)
 
 
 @main.command()
+def todo():
+    (
+        with_flow() | number_lines()
+        | cmd.run('grep -Ev {}', r'@flow strict(\s|$)')
+    # TODO give this a less internal-looking spelling
+    ).thunk(None, sys.stdout.buffer)
+
+
+@main.command()
+@click.argument('filename')
 def depends(filename):
     for imp, path in import_pairs():
         if path == filename:
@@ -68,13 +115,11 @@ def depends(filename):
 
 
 @main.command()
+@click.argument('filename')
 def rdepends(filename):
     for imp, path in import_pairs():
         if imp == filename:
             print(path)
-
-
-# number_lines
 
 
 if __name__ == '__main__':
