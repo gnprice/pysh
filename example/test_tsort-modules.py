@@ -91,10 +91,35 @@ def tree(chtempdir):
     check_cmd('cp -a {}/tsort-modules.orig tools/tsort-modules', THIS_DIR)
 
 
-tsort_script = os.path.join(THIS_DIR, "tsort-modules")
+our_script = os.path.join(THIS_DIR, "tsort-modules")
+ref_script = 'tools/tsort-modules'
+
+
+def compare_to_ref(argsfmt, *args):
+    assert slurp_cmd('{} '+argsfmt, our_script, args) \
+        == slurp_cmd('{} '+argsfmt, ref_script, args)
 
 
 @pytest.mark.usefixtures("tree")
-def test_pairs():
-    assert (slurp_cmd('{} pairs', tsort_script)
-            == slurp_cmd('tools/tsort-modules pairs'))
+def test_reference():
+    # Smoke-test our setup: confirm that the reference script is
+    # finding the data and transforming it as expected.
+
+    # NB that in Python 3.7+ (and CPython 3.6+ as an implementation
+    # detail), a dict is iterated in fixed order; else this would have
+    # to be slightly more subtle.
+    assert slurp_cmd('{} pairs', ref_script) \
+        == b'\n'.join(f'{imp} {path}'.encode('utf-8')
+                      for path, imports in import_graph.items()
+                      for imp in imports)
+
+
+@pytest.mark.usefixtures("tree")
+def test_script():
+    # Now just test by comparison with the reference script.
+    compare_to_ref('pairs')
+    compare_to_ref('list')
+    compare_to_ref('flow')
+    compare_to_ref('todo')
+    compare_to_ref('depends src/a.js')
+    compare_to_ref('rdepends src/a.js')
