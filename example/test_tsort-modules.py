@@ -123,3 +123,15 @@ def test_script():
     compare_to_ref('todo')
     compare_to_ref('depends src/a.js')
     compare_to_ref('rdepends src/a.js')
+
+
+if __name__ == '__main__':
+    '''
+    Usage: python example/test_tsort-modules.py
+
+    Set up a fixture tree.  Handy for debugging, studying perf, etc.
+    '''
+    dirname = tempfile.mkdtemp()
+    os.chdir(dirname)
+    tree(None)
+    print(f'Created fixture tree:\n  {dirname}')
