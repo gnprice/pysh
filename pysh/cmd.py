@@ -180,3 +180,40 @@ def test_run():
         | cmd.run('grep -m1 {}', 'yield')
         | cmd.run('perl -lane {}', 'print $F[0]')
     ) == b'91a20bf6b'
+
+
+def test_run_check():
+    import pytest
+    from . import cmd
+
+    with pytest.raises(subprocess.CalledProcessError):
+        pysh.slurp(cmd.run('false'))
+
+    assert pysh.slurp(cmd.run('false', _check=False)) == b''
+
+
+def test_run_stderr(capfd):
+    # On `capfd`, see pytest docs:
+    #   http://doc.pytest.org/en/latest/capture.html#accessing-captured-output-from-a-test-function
+
+    from . import cmd
+
+    assert list(
+        cmd.run('sh -c {}', 'echo a; echo ERR >&2; echo b')
+        | cmd.split(lines=True)
+    ) == [b'a', b'b']
+    assert capfd.readouterr() == ('', 'ERR\n')
+
+    assert list(
+        cmd.run('sh -c {}', 'echo a; echo ERR >&2; echo b',
+                _stderr=subprocess.DEVNULL)
+        | cmd.split(lines=True)
+    ) == [b'a', b'b']
+    assert capfd.readouterr() == ('', '')
+
+    assert list(
+        cmd.run('sh -c {}', 'echo a; echo ERR >&2; echo b',
+                _stderr=subprocess.STDOUT)
+        | cmd.split(lines=True)
+    ) == [b'a', b'ERR', b'b']
+    assert capfd.readouterr() == ('', '')
