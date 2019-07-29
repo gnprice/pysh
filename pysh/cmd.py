@@ -71,7 +71,9 @@ def split(input, *, lines=False):
         assert chunk
         print('chunk', chunk)
         pieces = chunk.split(delimiter)
-        if len(pieces) == 1:
+        if len(pieces) == 0:
+            continue
+        elif len(pieces) == 1:
             fragment += pieces[0]
         else:
             yield fragment + pieces[0]
@@ -177,8 +179,8 @@ def test_split():
                 (cmd.echo(s.encode(), ln=False)
                  | cmd.split(lines=lines))]
 
-    # FAIL assert echo_split('') == [] == ''.split()
-    # FAIL assert echo_split(' ') == [] == ' '.split()
+    assert echo_split('') == [] == ''.split()
+    assert echo_split(' ') == [] == ' '.split()
 
     assert echo_split('1') == ['1'] == '1'.split()
     assert echo_split('1 ') == ['1'] == '1 '.split()
@@ -217,7 +219,7 @@ def test_split_chunks():
 
     check_resplit(['1'])
     check_resplit(['1 '])
-    # FAIL check_resplit(['1', ' '])
+    check_resplit(['1', ' '])
 
     check_resplit(['1'], True)
     check_resplit(['1 '], True)
