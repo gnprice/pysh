@@ -80,7 +80,7 @@ def _split_lines(input):
     fragment = b''
     for chunk in chunks(input):
         assert chunk
-        pieces = chunk.split('\n')
+        pieces = chunk.split(b'\n')
         if len(pieces) == 0:
             continue
         elif len(pieces) == 1:
@@ -109,9 +109,9 @@ def split(input, *, lines=False):
     So '\na\n\nb\n' -> '', 'a', '', 'b', but 'a\nb' -> 'a', 'b'.
     '''
     if lines:
-        _split_lines(input)
+        return _split_lines(input)
     else:
-        _split_whitespace(input)
+        return _split_whitespace(input)
 
 
 @pysh.filter
