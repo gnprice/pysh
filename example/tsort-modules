@@ -31,16 +31,19 @@ def import_pairs() -> Iterator[Tuple[str, str]]:
     # TODO glob+format similar to shwords's split+format
     sources = glob('{}/src/**/*.js'.format(glob_escape(rootdir)),
                    recursive=True)
+    trim_prefix = f'{rootdir}/'
+    def trim(path):
+        return path[len(trim_prefix):] if path.startswith(trim_prefix) else path
     for line in (
             cmd.run('{}/flow get-imports --json {!@}',  # TODO f-style global
                     bindir, sources)
-            # TODO turn some or all of this `jq` into Python in pipeline...
-            | cmd.run('jq -r {}', f'''
-                      .[] | .requirements[] | [.import, .path]
-                      | map(ltrimstr("{rootdir}/")) | join(" ") ''')
+            # TODO make this even more Python and less `jq`.
+            # Note the `.[]` -- in this example the input is one JSON blob,
+            # so we'd want to convert that to an iterator.
+            | cmd.run('jq -c {}', '.[] | .requirements[]')
             | cmd.splitlines()):
-        # TODO ... and also avoid this bit of crude parsing
-        yield tuple(os.fsdecode(line).split(' ', 2))
+        item = json.loads(line)
+        yield (trim(item['import']), trim(item['path']))
 
 
 @main.command(name='pairs')
