@@ -184,7 +184,7 @@ def test_split():
 
     assert echo_split('1', True) == ['1'] == '1'.split('\n')
     assert echo_split('1\n', True) == ['1']
-    assert '1\n'.split('\n') == ['1', '']
+    assert '1\n'.split('\n') == ['1', '']  # differs!
 
 
 def test_split_chunks():
