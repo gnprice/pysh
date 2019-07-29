@@ -31,17 +31,16 @@ def import_pairs() -> Iterator[Tuple[str, str]]:
     # TODO glob+format similar to shwords's split+format
     sources = glob('{}/src/**/*.js'.format(glob_escape(rootdir)),
                    recursive=True)
-    imports_str = os.fsdecode(pysh.slurp(  # TODO stream to iterator
-        cmd.run('{}/flow get-imports --json {!@}',  # TODO f-style global
-                bindir, sources)
-        # TODO turn some or all of this `jq` into Python in pipeline...
-        | cmd.run('jq -r {}', f'''
-                  .[] | .requirements[] | [.import, .path]
-                  | map(ltrimstr("{rootdir}/")) | join(" ") ''')
-    ))
-    # TODO ... and also avoid this bit of crude parsing
-    for line in imports_str.split('\n'):
-        yield tuple(line.split(' ', 2))
+    for line in (
+            cmd.run('{}/flow get-imports --json {!@}',  # TODO f-style global
+                    bindir, sources)
+            # TODO turn some or all of this `jq` into Python in pipeline...
+            | cmd.run('jq -r {}', f'''
+                      .[] | .requirements[] | [.import, .path]
+                      | map(ltrimstr("{rootdir}/")) | join(" ") ''')
+            | cmd.splitlines()):
+        # TODO ... and also avoid this bit of crude parsing
+        yield tuple(os.fsdecode(line).split(' ', 2))
 
 
 @main.command(name='pairs')
@@ -58,12 +57,12 @@ def sorted_files() -> Iterator[Tuple[str, str]]:
         for imp, path in import_pairs():
             output.write(os.fsencode('{} {}\n'.format(imp, path)))
 
-    # TODO replace slurp+split with streaming lines
-    sorted_str = os.fsdecode(pysh.slurp(
-        _print_import_pairs()
-        | cmd.run('tsort', _check=False, _stderr=pysh.DEVNULL)
-    ))
-    return sorted_str.split('\n')
+    for line in (
+            _print_import_pairs()
+            | cmd.run('tsort', _check=False, _stderr=pysh.DEVNULL)
+            | cmd.splitlines()):
+        # TODO move decoding inside pipeline
+        yield os.fsdecode(line)
 
 
 @main.command(name='list')
