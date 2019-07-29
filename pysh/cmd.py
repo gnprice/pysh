@@ -60,11 +60,16 @@ def cat(output, *filenames):
 
 
 def _split_whitespace(input):
+    WHITESPACE = b' \t\r\n\f\v'  # from bytes.split docstring
     fragment = b''
     for chunk in chunks(input):
         assert chunk
+        if fragment and chunk[0] in WHITESPACE:
+            yield fragment
+            fragment = b''
         pieces = chunk.split()
         if len(pieces) == 0:
+            assert fragment == b''
             continue
         elif len(pieces) == 1:
             fragment += pieces[0]
@@ -72,6 +77,10 @@ def _split_whitespace(input):
             yield fragment + pieces[0]
             yield from pieces[1:-1]
             fragment = pieces[-1]
+        if chunk[-1] in WHITESPACE:
+            assert fragment
+            yield fragment
+            fragment = b''
     if fragment:
         yield fragment
 
@@ -249,6 +258,7 @@ def test_split_chunks():
     check_resplit(['1'])
     check_resplit(['1 '])
     check_resplit(['1', ' '])
+    check_resplit(['1', ' ', '2'])
 
     check_resplit(['1'], True)
     check_resplit(['1\n'], True)
