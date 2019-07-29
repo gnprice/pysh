@@ -175,16 +175,22 @@ def test_split():
                 (cmd.echo(s.encode(), ln=False)
                  | cmd.split(lines=lines))]
 
-    assert echo_split('') == [] == ''.split()
-    assert echo_split(' ') == [] == ' '.split()
+    def check_split_plain(s: str) -> None:
+        assert echo_split(s) == s.split()
 
-    assert echo_split('1') == ['1'] == '1'.split()
-    assert echo_split('1 ') == ['1'] == '1 '.split()
-    assert echo_split('1    ') == ['1'] == '1    '.split()
+    def check_split_lines(s: str, l: List[str]) -> None:
+        chopped = s[:-1] if s.endswith('\n') else s
+        assert echo_split(s, True) == chopped.split('\n') == l
 
-    assert echo_split('1', True) == ['1'] == '1'.split('\n')
-    assert echo_split('1\n', True) == ['1']
-    assert '1\n'.split('\n') == ['1', '']  # differs!
+    check_split_plain('')
+    check_split_plain(' ')
+    check_split_plain('1')
+    check_split_plain('1 ')
+    check_split_plain('1    ')
+
+    check_split_lines('1', ['1'])
+    check_split_lines('1\n', ['1'])
+    check_split_lines('1\n\n', ['1', ''])
 
 
 def test_split_chunks():
@@ -215,6 +221,11 @@ def test_split_chunks():
     check_resplit(['1\n'], True)
     check_resplit(['1', '\n'], True)
     check_resplit(['1', '\n', '\n'], True)
+    check_resplit(['1\n', '\n'], True)
+    check_resplit(['1', '\n\n'], True)
+    check_resplit(['1', '\n', '2'], True)
+    check_resplit(['1', '\n2'], True)
+    check_resplit(['1\n', '2'], True)
 
 
 def test_run():
