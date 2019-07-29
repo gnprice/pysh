@@ -11,7 +11,7 @@ from typing import *
 
 import click
 import pysh
-from pysh import cmd, check_cmd, check_cmd_f, slurp, slurp_cmd
+from pysh import cmd, check_cmd, check_cmd_f, slurp_cmd
 
 
 # Original script behaved like this:
@@ -32,7 +32,7 @@ def import_pairs() -> Iterator[Tuple[str, str]]:
     # TODO glob+format similar to shwords's split+format
     sources = glob('{}/src/**/*.js'.format(glob_escape(rootdir)),
                    recursive=True)
-    imports_str = os.fsdecode(slurp(  # TODO stream to iterator
+    imports_str = os.fsdecode(pysh.slurp(  # TODO stream to iterator
         cmd.run('{}/flow get-imports --json {!@}',  # TODO f-style global
                 bindir, sources)
         # TODO turn some or all of this `jq` into Python in pipeline...
@@ -60,7 +60,7 @@ def sorted_files() -> Iterator[Tuple[str, str]]:
             output.write(os.fsencode('{} {}\n'.format(imp, path)))
 
     # TODO replace slurp+split with streaming lines
-    sorted_str = os.fsdecode(slurp(
+    sorted_str = os.fsdecode(pysh.slurp(
         _print_import_pairs()
         # TODO re-export DEVNULL etc., to avoid `import subprocess`
         | cmd.run('tsort', _check=False, _stderr=subprocess.DEVNULL)
