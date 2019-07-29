@@ -6,6 +6,7 @@ Usage:
 
 import io
 import subprocess
+from typing import List
 
 from pysh.words import shwords
 
@@ -41,8 +42,10 @@ def devnull(input, output):
 # input none
 @pysh.output(type='stream')
 @pysh.argument(n='*', type=bytes)
-def echo(output, *words):
-    output.write(b' '.join(words) + b'\n')
+@pysh.option(' /-n', type=bool)
+def echo(output, *words, ln=True):
+    output.write(b' '.join(words)
+                 + (b'\n' if ln else b''))
 
 
 @pysh.filter
@@ -174,6 +177,55 @@ def test_echo():
     assert (
         pysh.slurp(cmd.echo(b'hello', b'world'))
     ) == b'hello world'
+
+
+def test_splitlines():
+    from . import cmd
+
+    def echo_splitlines(s: str) -> List[str]:
+        return [item.decode() for item in
+                (cmd.echo(s.encode(), ln=False)
+                 | cmd.splitlines())]
+
+    def check_splitlines(s: str, l: List[str]) -> None:
+        chopped = s[:-1] if s.endswith('\n') else s
+        assert echo_splitlines(s) == chopped.split('\n') == l
+
+    check_splitlines('1', ['1'])
+    check_splitlines('1\n', ['1'])
+    check_splitlines('1\n\n', ['1', ''])
+    check_splitlines('\n1\n\n2\n', ['', '1', '', '2'])
+
+
+def test_splitlines_chunks():
+    '''Manipulate chunk boundaries in `splitlines` input.'''
+
+    class WriteChunks:
+        def __init__(self, ss: List[str]) -> None:
+            self.bs = [s.encode() for s in reversed(ss)]
+
+        def read1(self) -> bytes:
+            if self.bs:
+                return self.bs.pop()
+            return b''
+
+    from . import cmd
+
+    def resplit(ss: List[str]) -> List[str]:
+        return [item.decode() for item in
+                cmd.splitlines().thunk(WriteChunks(ss), None)]
+
+    def check_resplit(ss: List[str]) -> None:
+        assert resplit(ss) == resplit([''.join(ss)])
+
+    check_resplit(['\n', '\n'])
+    check_resplit(['1', '\n'])
+    check_resplit(['1', '\n', '\n'])
+    check_resplit(['1\n', '\n'])
+    check_resplit(['1', '\n\n'])
+    check_resplit(['1', '\n', '2'])
+    check_resplit(['1', '\n2'])
+    check_resplit(['1\n', '2'])
 
 
 def test_run():
