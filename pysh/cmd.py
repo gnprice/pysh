@@ -64,6 +64,16 @@ def cat(output, *filenames):
 @pysh.output(type='iter')
 @pysh.option('-l', '--lines', type=bool)
 def split(input, *, lines=False):
+    '''
+    Split on whitespace; or yield lines.
+
+    If lines=False, semantics just like str.split(): items are
+    nonempty and whitespace-separated.  So ' a  b ' -> 'a', 'b'.
+
+    If lines=True, each item is a line: newline-terminated and
+    possibly empty, or what follows the last newline if nonempty.
+    So '\na\n\nb\n' -> '', 'a', '', 'b', but 'a\nb' -> 'a', 'b'.
+    '''
     delimiter = b'\n' if lines else None
     fragment = b''
     for chunk in chunks(input):
