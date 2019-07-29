@@ -67,9 +67,7 @@ def split(input, *, lines=False):
     delimiter = b'\n' if lines else None
     fragment = b''
     for chunk in chunks(input):
-        print('frag', fragment)
         assert chunk
-        print('chunk', chunk)
         pieces = chunk.split(delimiter)
         if len(pieces) == 0:
             continue
@@ -79,10 +77,8 @@ def split(input, *, lines=False):
             yield fragment + pieces[0]
             yield from pieces[1:-1]
             fragment = pieces[-1]
-    print('frag', fragment)
     if fragment:
         yield fragment
-    print('end')
 
 
 @pysh.filter
@@ -199,9 +195,7 @@ def test_split_chunks():
 
         def read1(self) -> bytes:
             if self.bs:
-                print(self.bs[-1])
                 return self.bs.pop()
-            print(b'')
             return b''
 
     from . import cmd
@@ -211,11 +205,7 @@ def test_split_chunks():
                 cmd.split(lines=lines).thunk(WriteChunks(ss), None)]
 
     def check_resplit(ss: List[str], lines: bool = False) -> None:
-        print(resplit(ss, lines), resplit([''.join(ss)], lines))
         assert resplit(ss, lines) == resplit([''.join(ss)], lines)
-
-    check_resplit(['1', '\n'], True)
-    # assert 0
 
     check_resplit(['1'])
     check_resplit(['1 '])
