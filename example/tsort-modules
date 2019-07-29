@@ -38,7 +38,9 @@ def import_pairs() -> Iterator[Tuple[str, str]]:
     for item_json in (
             cmd.run('{}/flow get-imports --json {!@}',
                     bindir, sources)  # TODO f-style global
-            # TODO maybe turn still more `jq` into Python in pipeline?
+            # TODO make this even more Python and less `jq`.
+            # Note `.[]` -- in this example the input is one JSON blob,
+            # so we'd want to convert that to an iterator.
             | cmd.run('jq -c {}', '.[] | .requirements[]')
             | cmd.split(lines=True)):
         item = json.loads(item_json)
