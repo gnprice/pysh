@@ -6,6 +6,7 @@ Usage:
 
 import io
 import subprocess
+from typing import *
 
 from pysh.words import shwords
 
@@ -41,8 +42,10 @@ def devnull(input, output):
 # input none
 @pysh.output(type='stream')
 @pysh.argument(n='*', type=bytes)
-def echo(output, *words):
-    output.write(b' '.join(words) + b'\n')
+@pysh.option(' /-n', type=bool)
+def echo(output, *words, ln=True):
+    output.write(b' '.join(words)
+                 + (b'\n' if ln else b''))
 
 
 @pysh.filter
@@ -64,7 +67,9 @@ def split(input, *, lines=False):
     delimiter = b'\n' if lines else None
     fragment = b''
     for chunk in chunks(input):
+        print('frag', fragment)
         assert chunk
+        print('chunk', chunk)
         pieces = chunk.split(delimiter)
         if len(pieces) == 1:
             fragment += pieces[0]
@@ -72,8 +77,10 @@ def split(input, *, lines=False):
             yield fragment + pieces[0]
             yield from pieces[1:-1]
             fragment = pieces[-1]
+    print('frag', fragment)
     if fragment:
         yield fragment
+    print('end')
 
 
 @pysh.filter
@@ -160,6 +167,62 @@ def test_echo():
     assert (
         pysh.slurp(cmd.echo(b'hello', b'world'))
     ) == b'hello world'
+
+
+def test_split():
+    from . import cmd
+
+    def echo_split(s: str, lines: bool = False) -> List[str]:
+        return [item.decode() for item in
+                (cmd.echo(s.encode(), ln=False)
+                 | cmd.split(lines=lines))]
+
+    # FAIL assert echo_split('') == [] == ''.split()
+    # FAIL assert echo_split(' ') == [] == ' '.split()
+
+    assert echo_split('1') == ['1'] == '1'.split()
+    assert echo_split('1 ') == ['1'] == '1 '.split()
+    assert echo_split('1    ') == ['1'] == '1    '.split()
+
+    assert echo_split('1', True) == ['1'] == '1'.split('\n')
+    assert echo_split('1\n', True) == ['1']
+    assert '1\n'.split('\n') == ['1', '']
+
+
+def test_split_chunks():
+    '''Manipulate chunk boundaries in `split` input.'''
+    class WriteChunks:
+        def __init__(self, ss: List[str]) -> None:
+            self.bs = [s.encode() for s in reversed(ss)]
+
+        def read1(self) -> bytes:
+            if self.bs:
+                print(self.bs[-1])
+                return self.bs.pop()
+            print(b'')
+            return b''
+
+    from . import cmd
+
+    def resplit(ss: List[str], lines: bool = False) -> List[str]:
+        return [item.decode() for item in
+                cmd.split(lines=lines).thunk(WriteChunks(ss), None)]
+
+    def check_resplit(ss: List[str], lines: bool = False) -> None:
+        print(resplit(ss, lines), resplit([''.join(ss)], lines))
+        assert resplit(ss, lines) == resplit([''.join(ss)], lines)
+
+    check_resplit(['1', '\n'], True)
+    # assert 0
+
+    check_resplit(['1'])
+    check_resplit(['1 '])
+    # FAIL check_resplit(['1', ' '])
+
+    check_resplit(['1'], True)
+    check_resplit(['1 '], True)
+    check_resplit(['1', '\n'], True)
+    check_resplit(['1', '\n', '\n'], True)
 
 
 def test_run():
