@@ -59,6 +59,40 @@ def cat(output, *filenames):
                 output.write(chunk)
 
 
+def _split_whitespace(input):
+    fragment = b''
+    for chunk in chunks(input):
+        assert chunk
+        pieces = chunk.split()
+        if len(pieces) == 0:
+            continue
+        elif len(pieces) == 1:
+            fragment += pieces[0]
+        else:
+            yield fragment + pieces[0]
+            yield from pieces[1:-1]
+            fragment = pieces[-1]
+    if fragment:
+        yield fragment
+
+
+def _split_lines(input):
+    fragment = b''
+    for chunk in chunks(input):
+        assert chunk
+        pieces = chunk.split('\n')
+        if len(pieces) == 0:
+            continue
+        elif len(pieces) == 1:
+            fragment += pieces[0]
+        else:
+            yield fragment + pieces[0]
+            yield from pieces[1:-1]
+            fragment = pieces[-1]
+    if fragment:
+        yield fragment
+
+
 @pysh.filter
 @pysh.input(type='stream')
 @pysh.output(type='iter')
@@ -74,21 +108,10 @@ def split(input, *, lines=False):
     possibly empty, or what follows the last newline if nonempty.
     So '\na\n\nb\n' -> '', 'a', '', 'b', but 'a\nb' -> 'a', 'b'.
     '''
-    delimiter = b'\n' if lines else None
-    fragment = b''
-    for chunk in chunks(input):
-        assert chunk
-        pieces = chunk.split(delimiter)
-        if len(pieces) == 0:
-            continue
-        elif len(pieces) == 1:
-            fragment += pieces[0]
-        else:
-            yield fragment + pieces[0]
-            yield from pieces[1:-1]
-            fragment = pieces[-1]
-    if fragment:
-        yield fragment
+    if lines:
+        _split_lines(input)
+    else:
+        _split_whitespace(input)
 
 
 @pysh.filter
