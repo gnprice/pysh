@@ -212,7 +212,7 @@ def test_split_chunks():
     check_resplit(['1', ' '])
 
     check_resplit(['1'], True)
-    check_resplit(['1 '], True)
+    check_resplit(['1\n'], True)
     check_resplit(['1', '\n'], True)
     check_resplit(['1', '\n', '\n'], True)
 
