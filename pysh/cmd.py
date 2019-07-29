@@ -87,18 +87,22 @@ def _split_whitespace(input):
 
 def _split_lines(input):
     fragment = b''
+    # Loop invariant:
+    #   Say lines = all_input_so_far.split(b'\n') .
+    #   Then we've yielded lines[:-1] so far,
+    #   and fragment == lines[-1].
     for chunk in chunks(input):
         assert chunk
         pieces = chunk.split(b'\n')
-        if len(pieces) == 0:
-            continue
-        elif len(pieces) == 1:
+        assert pieces
+        if len(pieces) == 1:
             fragment += pieces[0]
         else:
             yield fragment + pieces[0]
             yield from pieces[1:-1]
             fragment = pieces[-1]
     if fragment:
+        # Input didn't end with newline.  Yield the final, unterminated line.
         yield fragment
 
 
@@ -229,10 +233,12 @@ def test_split():
     check_split_plain('1')
     check_split_plain('1 ')
     check_split_plain('1    ')
+    check_split_plain(' 1  2 ')
 
     check_split_lines('1', ['1'])
     check_split_lines('1\n', ['1'])
     check_split_lines('1\n\n', ['1', ''])
+    check_split_lines('\n1\n\n2\n', ['', '1', '', '2'])
 
 
 def test_split_chunks():
@@ -255,11 +261,18 @@ def test_split_chunks():
     def check_resplit(ss: List[str], lines: bool = False) -> None:
         assert resplit(ss, lines) == resplit([''.join(ss)], lines)
 
+    check_resplit([' ', ' '])
+
     check_resplit(['1'])
     check_resplit(['1 '])
     check_resplit(['1', ' '])
     check_resplit(['1', ' ', '2'])
+    check_resplit([' ', ' '])
+    check_resplit([' ', ' ', '1'])
+    check_resplit([' ', ' ', '1 2'])
+    check_resplit([' ', ' ', '1 2 3'])
 
+    check_resplit(['\n', '\n'], True)
     check_resplit(['1'], True)
     check_resplit(['1\n'], True)
     check_resplit(['1', '\n'], True)
