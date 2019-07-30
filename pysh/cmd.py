@@ -93,6 +93,7 @@ def _split_lines(input):
     #   and fragment == lines[-1].
     for chunk in chunks(input):
         assert chunk
+        # TODO probably use `bytes.splitlines`
         pieces = chunk.split(b'\n')
         assert pieces
         if len(pieces) == 1:
