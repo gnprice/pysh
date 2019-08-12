@@ -33,9 +33,10 @@ below; so this also serves as a way to experiment on that design.
 
 The `pysh` library works today, though there are further features that
 would be useful and interesting to add.  For some small demos, on real
-scripts originally written in Bash, see the `example/` directory.
+scripts originally written in Bash, see the [`example/`](example/)
+directory.
 
-The implementation, in `src/`, also contains many small examples in
+The implementation, in `pysh/`, also contains many small examples in
 the form of unit tests.  To run the unit tests (as well as tests of
 the `example/` demos), simply run [pytest]:
 ```
@@ -61,17 +62,17 @@ virtualenv.  Automating the latter would be nice; PRs welcome.
 
 ## Pysh, the design sketch of a new shell
 
-Another thread of this work is in `design.md`.  This is a speculative
-design sketch for an attempt to meet our challenge across its full
-range, including everyday interactive use:
+Another thread of this work is in [`design.md`](design.md).  This is a
+speculative design sketch for an attempt to meet our challenge across
+its full range, including everyday interactive use:
 
 > Pysh is a new shell that scales smoothly from everyday interactive
 > commands as short as `ls` through 300-character "one-liners" as
 > conveniently as Bash, and up through many-KLoC programs with the
 > robustness of a modern programming language.
 
-See `design.md` for many more details on design and (hypothetical!)
-implementation.
+See [`design.md`](design.md) for many more details on design and
+(hypothetical!) implementation.
 
 The core of this hypothetical new shell is Python: it runs by
 transforming to Python bytecode, and its syntax for scripts is Python
@@ -83,13 +84,13 @@ The name "Pysh" stems from this vision.
 ## Trying it and contributing
 
 If this challenge sounds interesting or important to you, please try
-the `pysh` library, read the full-blown-shell design doc, and send us
-your feedback!
+the `pysh` library, read the full-blown-shell [design doc](design.md),
+and send us your feedback!
 
 We're especially interested in hearing about your experience trying to
-use `pysh` in scripts.  Take a look at the demo scripts in `example/`;
-then look at some script of your own, or an interesting small piece of
-one, and try converting it to use `pysh`.
+use `pysh` in scripts.  Take a look at the demo scripts in
+[`example/`](example/); then look at some script of your own, or an
+interesting small piece of one, and try converting it to use `pysh`.
 * How does it compare to the original?
 * What patterns are awkward to express in `pysh`?
 * What patterns do you not see a good way to express?
