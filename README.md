@@ -53,12 +53,12 @@ also be required for a full-blown Pysh shell; so this also serves as a
 way to experiment on that design.
 
 The `pysh` library works today, though there are further features that
-would be useful and interesting to add.  For a small demo, on a real
-script originally written in Bash, see the `example/` directory.
+would be useful and interesting to add.  For some small demos, on real
+scripts originally written in Bash, see the `example/` directory.
 
 The implementation, in `src/`, also contains many small examples in
 the form of unit tests.  To run the unit tests (as well as tests of
-the `example/` demo), simply run [pytest]:
+the `example/` demos), simply run [pytest]:
 ```
 $ pytest -q
 ............                                                             [100%]
