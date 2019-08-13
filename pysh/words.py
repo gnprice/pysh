@@ -4,6 +4,8 @@ import sys
 
 
 def get_field(field_name, args, kwargs):
+    # Corresponds to string.Formatter.get_field in the stdlib.
+
     first, rest = _string.formatter_field_name_split(field_name)
 
     obj = args[first] if isinstance(first, int) else kwargs[first]
@@ -33,6 +35,43 @@ PAT_MARKUP = re.compile(
 
 
 def shwords(format_string, *args, **kwargs):
+  '''
+  Split format_string, then format using args and kwargs, producing a list.
+
+  Handy for producing the command line for invoking an external
+  program, conveniently but without the complex gotchas of
+  shell parsing.  For example:
+
+  >>> shwords('rm -rf /tmp/{userdoc}', userdoc='1 .. 2')
+  ['rm', '-rf', '/tmp/1 .. 2']
+
+  The `format_string` is split on spaces.  Each word is then formatted
+  through a minilanguage similar to `str.format`.  Each word of
+  `format_string` produces exactly one item in the result (unless
+  explicitly instructed otherwise with `{!@}`), regardless of the
+  contents of the interpolated values.
+
+  The formatting minilanguage is exactly the same as for `str.format`,
+  except:
+
+  * An additional conversion `!@`, as in `{!@}`.  This must appear in
+    format_string as a whole word.  The argument must be an iterable,
+    and each element of the iterable becomes an element in the result.
+
+  * The conversions `!r` and `!a` are omitted, because they only make
+    sense within a Python context.
+
+  * No nested interpolation, as in `{:{}}`.
+  '''
+  # This implementation is closely based on `string.Formatter` in the
+  # stdlib, particularly the `vformat` method; but modified to make
+  # the customizations we need.
+  #
+  # One salient change is that to get more control of the loop,
+  # instead of using `_string.formatter_parser` we drive it ourselves
+  # using the regexes above, some of which are distilled from the
+  # C code that implements that function.
+
   result = []
 
   fmt = format_string.strip()
