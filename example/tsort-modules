@@ -27,13 +27,16 @@ def main() -> None:
     pass
 
 
+def ltrimstr(prefix: AnyStr, s: AnyStr) -> AnyStr:
+    '''Matches jq's `ltrimstr` function.'''
+    return s[len(prefix):] if s.startswith(prefix) else s
+
+
 def import_pairs() -> Iterator[Tuple[str, str]]:
     # TODO glob+format similar to shwords's split+format
     sources = glob('{}/src/**/*.js'.format(glob_escape(rootdir)),
                    recursive=True)
-    trim_prefix = f'{rootdir}/'
-    def trim(path):
-        return path[len(trim_prefix):] if path.startswith(trim_prefix) else path
+    prefix = f'{rootdir}/'
     for line in (
             cmd.run('{}/flow get-imports --json {!@}',  # TODO f-style global
                     bindir, sources)
@@ -43,7 +46,8 @@ def import_pairs() -> Iterator[Tuple[str, str]]:
             | cmd.run('jq -c {}', '.[] | .requirements[]')
             | cmd.splitlines()):
         item = json.loads(line)
-        yield (trim(item['import']), trim(item['path']))
+        yield (ltrimstr(prefix, item['import']),
+               ltrimstr(prefix, item['path']))
 
 
 @main.command(name='pairs')
