@@ -50,20 +50,23 @@ def import_pairs() -> Iterator[Tuple[str, str]]:
                    ltrimstr(prefix, req['path']))
 
 
+@pysh.filter
+@pysh.output(type='stream')
+def _print_import_pairs(output):
+    for imp, path in import_pairs():
+        # TODO encoding -- really want just `print(imp, path)`
+        output.write(os.fsencode('{} {}\n'.format(imp, path)))
+
+
 @main.command(name='pairs')
 def print_import_pairs() -> None:
-    for imp, path in import_pairs():
-        print(imp, path)
+    # TODO make this wrapper unneeded (or automatic); slogan says
+    #   a Pysh filter is a "shell function", so it should both get
+    #   a command-line interface and be ready to use in pipelines.
+    pysh.to_stdout(_print_import_pairs())
 
 
 def sorted_files() -> Iterator[Tuple[str, str]]:
-    # TODO unify/dedupe this with print_import_pairs above
-    @pysh.filter
-    @pysh.output(type='stream')
-    def _print_import_pairs(output):
-        for imp, path in import_pairs():
-            output.write(os.fsencode('{} {}\n'.format(imp, path)))
-
     for line in (
             _print_import_pairs()
             | cmd.run('tsort', _check=False, _stderr=pysh.DEVNULL)
