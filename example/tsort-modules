@@ -37,11 +37,10 @@ def import_pairs() -> Iterator[Tuple[str, str]]:
     sources = glob('{}/src/**/*.js'.format(glob_escape(rootdir)),
                    recursive=True)
     prefix = f'{rootdir}/'
-    imports = json.loads(
+    imports = json.loads(pysh.slurp(
         # TODO hand json.load a file, without slurp
-        pysh.slurp(
-            cmd.run('{}/flow get-imports --json {!@}',  # TODO f-style global
-                    bindir, sources)))
+        cmd.run('{}/flow get-imports --json {!@}',  # TODO f-style global
+                bindir, sources)))
     for item in imports.values():
         for req in item['requirements']:
             yield (ltrimstr(prefix, req['import']),
