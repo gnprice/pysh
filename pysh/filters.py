@@ -106,8 +106,8 @@ class Function:
         self.argspecs = getattr(func, 'argspecs', [])
 
     def __call__(self, *args, **kwargs):
-        pass_input = (self.input.type == 'stream')
-        pass_output = (self.output.type == 'stream')
+        pass_input = self.pass_input(self.input)
+        pass_output = self.pass_output(self.output)
         if pass_input and pass_output:
             thunk = (lambda input, output:
                      self.func(input, output, *args, **kwargs))
@@ -118,6 +118,16 @@ class Function:
         else:
             thunk = lambda: self.func(*args, **kwargs)
         return Filter(self.input, self.output, thunk)
+
+    @staticmethod
+    def pass_input(input: IoSpec) -> bool:
+        '''Whether to pass as an argument to the function.'''
+        return input.type in ('stream', 'iter', 'bytes')
+
+    @staticmethod
+    def pass_output(output: IoSpec) -> bool:
+        '''Whether to pass as an argument to the function.'''
+        return output.type in ('stream',)
 
 
 def filter(func):
