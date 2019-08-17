@@ -42,22 +42,21 @@ class Filter:
         return self.thunk(None, None)
 
     def __iter__(self):
-        if self.output.type != 'iter':
+        if self.output.type in ('none', 'stream', 'bytes'):
             raise RuntimeError()
+        assert self.output.type in ('iter',)
         return self()
 
     def __or__(self, other: 'Filter'):
         '''Aka `|` -- the pipe operator.'''
         if self.output.type != other.input.type:
             raise RuntimeError()
-        if self.output.type == 'none':
+        if self.output.type in ('none',):
             raise RuntimeError()
-        elif self.output.type == 'stream':
-            thunk = pipe_by_stream(self, other)
         elif self.output.type in ('iter', 'bytes'):
             raise NotImplementedError()
-        else:
-            assert False
+        assert self.output.type in ('stream',)
+        thunk = pipe_by_stream(self, other)
         return Filter(self.input, other.output, thunk)
 
     @staticmethod
@@ -67,8 +66,7 @@ class Filter:
             return True
         elif input.type in ('none',):
             return False
-        else:
-            assert False
+        assert False
 
     @staticmethod
     def pass_output(output: IoSpec) -> bool:
@@ -77,8 +75,7 @@ class Filter:
             return True
         elif output.type in ('none', 'iter', 'bytes'):
             return False
-        else:
-            assert False
+        assert False
 
 
 slurp_filter = Filter(IoSpec('stream'), IoSpec('bytes'),
@@ -103,8 +100,9 @@ def to_stdout(filter):
     '''
     if filter.input.required:
         raise RuntimeError()
-    if filter.output.type != 'stream':
+    if filter.output.type in ('none', 'iter', 'bytes'):
         raise RuntimeError()
+    assert filter.output.type in ('stream',)
     filter.thunk(None, sys.stdout.buffer)
 
 
