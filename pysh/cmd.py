@@ -4,6 +4,7 @@ Usage:
 
 '''
 
+import codecs
 import io
 import subprocess
 from typing import List
@@ -69,11 +70,21 @@ def cat(output, *filenames):
 
 
 @pysh.filter
+@pysh.input(type='stream')
+@pysh.output(type='tstream')
+def decode(input, output):
+    # TODO tests
+    for chunk in codecs.iterdecode(chunks(input), 'utf-8'):
+        output.write(chunk)
+
+
+@pysh.filter
 @pysh.input(type='tstream')
 @pysh.output(type='stream')
 def encode(input, output):
-    for chunk in chunks_text(input):
-        output.write(chunk.encode())
+    # TODO tests
+    for chunk in codecs.iterencode(chunks_text(input), 'utf-8'):
+        output.write(chunk)
 
 
 @pysh.filter
@@ -194,6 +205,14 @@ def test_echo():
     assert (
         pysh.slurp(cmd.echo(b'hello', b'world'))
     ) == b'hello world'
+
+
+def test_decode():
+    from . import cmd
+    world = '\N{WORLD MAP}'.encode()
+    assert pysh.slurp(
+        cmd.echo(b'hello', world) | cmd.decode() | cmd.encode()
+    ) == b'hello ' + world
 
 
 def test_splitlines():
