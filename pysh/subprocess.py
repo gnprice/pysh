@@ -37,6 +37,19 @@ from typing import Optional
 from .words import caller_namespace, shwords
 
 
+# Has the same meaning for stdout/stderr arguments of these
+# functions, and of cmd.run, as for subprocess.Popen.
+DEVNULL = subprocess.DEVNULL
+
+# Has the same meaning for stderr arguments of these functions,
+# and of cmd.run, as for subprocess.Popen.
+STDOUT = subprocess.STDOUT
+
+# Would be easy to add this if useful, but I don't see a case
+# where it would make sense to pass:
+# PIPE = subprocess.PIPE
+
+
 # There's some code duplication in these *_f functions, especially
 # try_cmd_f and try_slurp_cmd_f.  Would be nice to refactor that
 # away... but not if it makes the code significantly more complex to

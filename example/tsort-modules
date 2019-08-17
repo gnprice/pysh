@@ -5,7 +5,6 @@
 from glob import glob, escape as glob_escape
 import json
 import os.path
-import subprocess
 import sys
 from typing import *
 
@@ -62,8 +61,7 @@ def sorted_files() -> Iterator[Tuple[str, str]]:
     # TODO replace slurp+split with streaming lines
     sorted_str = os.fsdecode(pysh.slurp(
         _print_import_pairs()
-        # TODO re-export DEVNULL etc., to avoid `import subprocess`
-        | cmd.run('tsort', _check=False, _stderr=subprocess.DEVNULL)
+        | cmd.run('tsort', _check=False, _stderr=pysh.DEVNULL)
     ))
     return sorted_str.split('\n')
 

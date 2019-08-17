@@ -7,6 +7,8 @@ from .filters import slurp  # style: pysh.slurp
 from .subprocess import (  # style: from pysh import ...
     check_cmd, check_cmd_f, slurp_cmd, slurp_cmd_f,
     try_cmd, try_cmd_f, try_slurp_cmd, try_slurp_cmd_f,
+    # style: pysh.DEVNULL, etc.
+    DEVNULL, STDOUT,
 )
 
 # Decorators for "shell builtins".
