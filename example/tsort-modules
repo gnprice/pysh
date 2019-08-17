@@ -41,6 +41,9 @@ def import_pairs() -> Iterator[Tuple[str, str]]:
         # TODO hand json.load a file, without slurp
         cmd.run('{}/flow get-imports --json {!@}',  # TODO f-style global
                 bindir, sources)))
+    # A little more typing than jq's `.[]`, and much more explicit.
+    # In particular, this disambiguates that we're expecting an object,
+    # not an array.
     for item in imports.values():
         for req in item['requirements']:
             yield (ltrimstr(prefix, req['import']),
