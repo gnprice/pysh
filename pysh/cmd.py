@@ -59,13 +59,27 @@ def cat(output, *filenames):
 @pysh.filter
 @pysh.input(type='stream')
 @pysh.output(type='iter')
-@pysh.option('-l', '--lines', type=bool)
-def split(input, *, lines=False):
-    delimiter = b'\n' if lines else None
+def splitlines(input):
+    '''
+    Split the input stream into an iterator of lines.
+
+    The meaning of "line" follows the standard Unix convention:
+     * Each newline character (b'\n') terminates a line.
+     * If there are any characters after the last newline, they
+       form one last line.
+
+    This is also the same behavior as Python's `bytes.splitlines()`,
+    except that only b'\n' counts as a newline: b'\r' is treated the
+    same as any other byte.
+    '''
+    # Future feature: options like delim=b'\0'
+    delimiter = b'\n'
     fragment = b''
     for chunk in chunks(input):
         assert chunk
         pieces = chunk.split(delimiter)
+        assert pieces
+        # There are `len(pieces) - 1` newlines in `chunk`.
         if len(pieces) == 1:
             fragment += pieces[0]
         else:
@@ -142,7 +156,7 @@ def test_pipeline():
     from . import cmd
 
     assert list(
-        cmd.cat(b'/etc/shells') | cmd.split(lines=True)
+        cmd.cat(b'/etc/shells') | cmd.splitlines()
         # sh { cat /etc/shells | split -l }
     ) == open('/etc/shells', 'rb').read().rstrip(b"\n").split(b"\n")
 
@@ -167,7 +181,7 @@ def test_run():
 
     # (Commits in this repo's history.)
     assert list(cmd.run('git log --abbrev=9 --format={} {}', '%p', '9cdfc6d46')
-                | cmd.split(lines=True)) \
+                | cmd.splitlines()) \
         == [b'a515d0250', b'c90596c89', b'']
 
     assert (
@@ -200,20 +214,20 @@ def test_run_stderr(capfd):
 
     assert list(
         cmd.run('sh -c {}', 'echo a; echo ERR >&2; echo b')
-        | cmd.split(lines=True)
+        | cmd.splitlines()
     ) == [b'a', b'b']
     assert capfd.readouterr() == ('', 'ERR\n')
 
     assert list(
         cmd.run('sh -c {}', 'echo a; echo ERR >&2; echo b',
                 _stderr=subprocess.DEVNULL)
-        | cmd.split(lines=True)
+        | cmd.splitlines()
     ) == [b'a', b'b']
     assert capfd.readouterr() == ('', '')
 
     assert list(
         cmd.run('sh -c {}', 'echo a; echo ERR >&2; echo b',
                 _stderr=subprocess.STDOUT)
-        | cmd.split(lines=True)
+        | cmd.splitlines()
     ) == [b'a', b'ERR', b'b']
     assert capfd.readouterr() == ('', '')
