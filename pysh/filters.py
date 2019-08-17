@@ -37,12 +37,9 @@ class Filter:
     def __call__(self):
         if self.input.required:
             raise RuntimeError()
-        if not (Filter.pass_output(self.output) and self.output.required):
-            return self.thunk(None, None)
-        elif self.output.type == 'stream':
-            raise NotImplementedError()  # Return the pipe/stream.
-        else:
-            assert False
+        if self.output.required and Filter.pass_output(self.output):
+            raise NotImplementedError()  # Probably return the pipe/stream.
+        return self.thunk(None, None)
 
     def __iter__(self):
         if self.output.type != 'iter':
