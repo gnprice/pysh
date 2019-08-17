@@ -95,19 +95,13 @@ def with_flow():
 
 @main.command(name='flow')
 def with_flow_numbered():
-    (
-        with_flow() | number_lines()
-    # TODO give this a less internal-looking spelling
-    ).thunk(None, sys.stdout.buffer)
+    pysh.to_stdout(with_flow() | number_lines())
 
 
 @main.command()
 def todo():
-    (
-        with_flow() | number_lines()
-        | cmd.run('grep -Ev {}', r'@flow strict(\s|$)')
-    # TODO give this a less internal-looking spelling
-    ).thunk(None, sys.stdout.buffer)
+    pysh.to_stdout(with_flow() | number_lines()
+                   | cmd.run('grep -Ev {}', r'@flow strict(\s|$)'))
 
 
 @main.command()

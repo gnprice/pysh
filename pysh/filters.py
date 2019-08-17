@@ -1,5 +1,6 @@
 from collections import namedtuple
 import io
+import sys
 from typing import Any, Callable, List, NamedTuple
 
 
@@ -74,6 +75,13 @@ def slurp(filter):
     '''
     # For reference on `$(...)` see Bash manual, 3.5.4 Command Substitution.
     return (filter | slurp_filter)()
+
+
+def to_stdout(filter):
+    '''
+    Run the pipeline, with output directed to our stdout.
+    '''
+    filter.thunk(None, sys.stdout.buffer)
 
 
 Argspec = namedtuple('Argspec', ['type', 'n'])
