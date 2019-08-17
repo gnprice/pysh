@@ -17,7 +17,11 @@ def pipe_by_stream(left: 'Filter', right: 'Filter'):
 
 class IoSpec(NamedTuple):
     type: str = 'none'  # 'none' | 'stream' | 'iter' | 'bytes' | ...
-    required: bool = True
+    required_: bool = True
+
+    @property
+    def required(self) -> bool:
+        return self.required_ and self.type != 'none'
 
 
 class Filter:
@@ -31,9 +35,9 @@ class Filter:
         self.thunk = thunk
 
     def __call__(self):
-        if self.input.required and self.input.type != 'none':
+        if self.input.required:
             raise RuntimeError()
-        if (self.output.type in ('none', 'iter', 'bytes')
+        if (self.output.type in ('iter', 'bytes')
               or not self.output.required):
             return self.thunk(None, None)
         elif self.output.type == 'stream':
@@ -81,7 +85,7 @@ def to_stdout(filter):
     '''
     Run the pipeline, with output directed to our stdout.
     '''
-    if filter.input.required and filter.input.type != 'none':
+    if filter.input.required:
         raise RuntimeError()
     if filter.output.type != 'stream':
         raise RuntimeError()
