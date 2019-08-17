@@ -57,7 +57,7 @@ class Filter:
             raise RuntimeError()
         elif self.output.type == 'stream':
             thunk = pipe_by_stream(self, other)
-        elif self.output.type == 'iter':
+        elif self.output.type in ('iter', 'bytes'):
             raise NotImplementedError()
         else:
             assert False
