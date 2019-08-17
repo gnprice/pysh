@@ -51,11 +51,10 @@ def import_pairs() -> Iterator[Tuple[str, str]]:
 
 
 @pysh.filter
-@pysh.output(type='stream')
+@pysh.output(type='tstream')
 def _print_import_pairs(output):
     for imp, path in import_pairs():
-        # TODO encoding -- really want just `print(imp, path)`
-        output.write(os.fsencode('{} {}\n'.format(imp, path)))
+        print(imp, path, file=output)
 
 
 @main.command(name='pairs')
@@ -69,6 +68,7 @@ def print_import_pairs() -> None:
 def sorted_files() -> Iterator[Tuple[str, str]]:
     for line in (
             _print_import_pairs()
+            | cmd.encode()
             | cmd.run('tsort', _check=False, _stderr=pysh.DEVNULL)
             | cmd.splitlines()):
         # TODO move decoding inside pipeline

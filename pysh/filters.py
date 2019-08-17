@@ -15,8 +15,19 @@ def pipe_by_stream(left: 'Filter', right: 'Filter'):
     return piped
 
 
+def pipe_by_tstream(left: 'Filter', right: 'Filter'):
+    # TODO this exhausts left, then starts right.
+    # This is where we really need async.
+    def piped(input, output):
+        buf = io.StringIO()
+        left.thunk(input, buf)
+        buf.seek(0)
+        return right.thunk(buf, output)
+    return piped
+
+
 class IoSpec(NamedTuple):
-    type: str = 'none'  # 'none' | 'stream' | 'iter' | 'bytes' | ...
+    type: str = 'none'  # 'none' | 'stream' | 'tstream' | 'iter' | 'bytes' | ...
     required_: bool = True
 
     @property
@@ -42,7 +53,7 @@ class Filter:
         return self.thunk(None, None)
 
     def __iter__(self):
-        if self.output.type in ('none', 'stream', 'bytes'):
+        if self.output.type in ('none', 'stream', 'tstream', 'bytes'):
             raise RuntimeError()
         assert self.output.type in ('iter',)
         return self()
@@ -55,14 +66,19 @@ class Filter:
             raise RuntimeError()
         elif self.output.type in ('iter', 'bytes'):
             raise NotImplementedError()
-        assert self.output.type in ('stream',)
-        thunk = pipe_by_stream(self, other)
+        assert self.output.type in ('stream', 'tstream')
+
+        if self.output.type == 'stream':
+            thunk = pipe_by_stream(self, other)
+        else:
+            thunk = pipe_by_tstream(self, other)
         return Filter(self.input, other.output, thunk)
+
 
     @staticmethod
     def pass_input(input: IoSpec) -> bool:
         '''Whether the thunk expects input as an argument.'''
-        if input.type in ('stream', 'iter', 'bytes'):
+        if input.type in ('stream', 'tstream', 'iter', 'bytes'):
             return True
         elif input.type in ('none',):
             return False
@@ -71,7 +87,7 @@ class Filter:
     @staticmethod
     def pass_output(output: IoSpec) -> bool:
         '''Whether the thunk expects output as an argument.'''
-        if output.type in ('stream',):
+        if output.type in ('stream', 'tstream'):
             return True
         elif output.type in ('none', 'iter', 'bytes'):
             return False
@@ -102,8 +118,11 @@ def to_stdout(filter):
         raise RuntimeError()
     if filter.output.type in ('none', 'iter', 'bytes'):
         raise RuntimeError()
-    assert filter.output.type in ('stream',)
-    filter.thunk(None, sys.stdout.buffer)
+    assert filter.output.type in ('stream', 'tstream')
+    if filter.output.type == 'stream':
+        filter.thunk(None, sys.stdout.buffer)
+    else:
+        filter.thunk(None, sys.stdout)
 
 
 Argspec = namedtuple('Argspec', ['type', 'n'])

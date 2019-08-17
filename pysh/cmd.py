@@ -26,6 +26,15 @@ def chunks(f: io.BufferedReader):
         chunk = f.read1()
 
 
+def chunks_text(f: io.TextIOBase):
+    # Awkwardly seem to lack read1().  Use readline() because many
+    # writers will write a line at a time... and use a max size, too.
+    chunk = f.readline(8192)
+    while chunk:
+        yield chunk
+        chunk = f.readline(8192)
+
+
 @pysh.filter
 @pysh.input(type='stream', required=False)
 @pysh.output(type='stream', required=False)
@@ -57,6 +66,14 @@ def cat(output, *filenames):
         with open(filename, 'rb') as f:
             for chunk in chunks(f):
                 output.write(chunk)
+
+
+@pysh.filter
+@pysh.input(type='tstream')
+@pysh.output(type='stream')
+def encode(input, output):
+    for chunk in chunks_text(input):
+        output.write(chunk.encode())
 
 
 @pysh.filter
