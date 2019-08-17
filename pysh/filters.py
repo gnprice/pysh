@@ -122,12 +122,22 @@ class Function:
     @staticmethod
     def pass_input(input: IoSpec) -> bool:
         '''Whether to pass as an argument to the function.'''
-        return input.type in ('stream', 'iter', 'bytes')
+        if input.type in ('stream', 'iter', 'bytes'):
+            return True
+        elif input.type in ('none',):
+            return False
+        else:
+            assert False
 
     @staticmethod
     def pass_output(output: IoSpec) -> bool:
         '''Whether to pass as an argument to the function.'''
-        return output.type in ('stream',)
+        if output.type in ('stream',):
+            return True
+        elif output.type in ('none', 'iter', 'bytes'):
+            return False
+        else:
+            assert False
 
 
 def filter(func):
