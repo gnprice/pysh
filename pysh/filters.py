@@ -37,8 +37,7 @@ class Filter:
     def __call__(self):
         if self.input.required:
             raise RuntimeError()
-        if (self.output.type in ('iter', 'bytes')
-              or not self.output.required):
+        if not (Filter.pass_output(self.output) and self.output.required):
             return self.thunk(None, None)
         elif self.output.type == 'stream':
             raise NotImplementedError()  # Return the pipe/stream.
@@ -63,6 +62,26 @@ class Filter:
         else:
             assert False
         return Filter(self.input, other.output, thunk)
+
+    @staticmethod
+    def pass_input(input: IoSpec) -> bool:
+        '''Whether the thunk expects input as an argument.'''
+        if input.type in ('stream', 'iter', 'bytes'):
+            return True
+        elif input.type in ('none',):
+            return False
+        else:
+            assert False
+
+    @staticmethod
+    def pass_output(output: IoSpec) -> bool:
+        '''Whether the thunk expects output as an argument.'''
+        if output.type in ('stream',):
+            return True
+        elif output.type in ('none', 'iter', 'bytes'):
+            return False
+        else:
+            assert False
 
 
 slurp_filter = Filter(IoSpec('stream'), IoSpec('bytes'),
@@ -110,8 +129,8 @@ class Function:
         self.argspecs = getattr(func, 'argspecs', [])
 
     def __call__(self, *args, **kwargs):
-        pass_input = self.pass_input(self.input)
-        pass_output = self.pass_output(self.output)
+        pass_input = Filter.pass_input(self.input)
+        pass_output = Filter.pass_output(self.output)
         if pass_input and pass_output:
             thunk = (lambda input, output:
                      self.func(input, output, *args, **kwargs))
@@ -122,26 +141,6 @@ class Function:
         else:
             thunk = lambda: self.func(*args, **kwargs)
         return Filter(self.input, self.output, thunk)
-
-    @staticmethod
-    def pass_input(input: IoSpec) -> bool:
-        '''Whether to pass as an argument to the function.'''
-        if input.type in ('stream', 'iter', 'bytes'):
-            return True
-        elif input.type in ('none',):
-            return False
-        else:
-            assert False
-
-    @staticmethod
-    def pass_output(output: IoSpec) -> bool:
-        '''Whether to pass as an argument to the function.'''
-        if output.type in ('stream',):
-            return True
-        elif output.type in ('none', 'iter', 'bytes'):
-            return False
-        else:
-            assert False
 
 
 def filter(func):
