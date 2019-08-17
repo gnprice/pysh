@@ -81,6 +81,10 @@ def to_stdout(filter):
     '''
     Run the pipeline, with output directed to our stdout.
     '''
+    if filter.input.required and filter.input.type != 'none':
+        raise RuntimeError()
+    if filter.output.type != 'stream':
+        raise RuntimeError()
     filter.thunk(None, sys.stdout.buffer)
 
 
