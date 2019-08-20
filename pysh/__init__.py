@@ -2,7 +2,7 @@
 # TODO better organize to reflect style `pysh.foo` vs `from pysh import foo`
 
 # Utilities for running external commands.
-from .words import shwords  # style: from pysh import shwords
+from .words import shwords, shwords_f  # style: from pysh import shwords
 from .filters import slurp, to_stdout  # style: pysh.slurp, etc.
 from .subprocess import (  # style: from pysh import ...
     check_cmd, check_cmd_f, slurp_cmd, slurp_cmd_f,
