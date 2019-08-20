@@ -32,8 +32,10 @@ In short, these functions fill the following table:
 '''
 
 import subprocess
+import sys
 from typing import Optional
 
+from . import cmd
 from .words import caller_namespace, shwords
 
 
@@ -58,22 +60,24 @@ STDOUT = subprocess.STDOUT
 
 def check_cmd(fmt, *args,
               _stdin=None, _stdout=None, _stderr=None,
-              _cwd=None, _timeout=None,
-              **kwargs) -> None:
+              ) -> None:
     '''
     Just like `subprocess.check_call`, but with `shwords`.
 
     The named keyword arguments are passed through, with `stdin=_stdin` etc.
     All other arguments are passed to `shwords`.
     '''
-    subprocess.check_call(
-        shwords(fmt, *args, **kwargs),
-        stdin=_stdin,
-        stdout=_stdout,
-        stderr=_stderr,
-        cwd=_cwd,
-        timeout=_timeout,
-    )
+    # no kwargs -- maybe no need?
+    # no cwd, timeout -- easy to add back
+    # no capturing stdin -- easy to pass sys.stdin.buffer,
+    #   but that goes wrong in tests because pytest has substituted
+    #   its own funny object there, and similar could happen for other things
+    #   that muck with sys.stdin/sys.stdout; we could easily be fooled into
+    #   eagerly consuming this process's own stdin.  Probably best to make it
+    #   opt-in anyway.
+    cmd.run(fmt, *args, _stderr=_stderr).thunk(
+        # TODO _stdin, _stdout args
+        None, sys.stdout.buffer)
 
 
 def check_cmd_f(fmt, **kwargs) -> None:
