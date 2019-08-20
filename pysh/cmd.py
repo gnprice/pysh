@@ -120,6 +120,14 @@ def splitlines(input):
         yield fragment
 
 
+def has_fileno(f: io.IOBase) -> bool:
+    try:
+        f.fileno()
+        return True
+    except io.UnsupportedOperation:
+        return False
+
+
 @pysh.filter
 @pysh.input(type='stream', required=False)
 @pysh.output(type='stream')
@@ -128,10 +136,17 @@ def splitlines(input):
 def run(input, output, fmt, *args, _check=True, _stderr=None):
     cmd = shwords(fmt, *args)
 
+    assert input is None or isinstance(input, io.IOBase)
+    assert isinstance(output, io.IOBase)
+
+    stdin = (subprocess.DEVNULL if input is None
+             else input if has_fileno(input)
+             else subprocess.PIPE)
+
     # Compare subprocess.run and Popen.communicate, in cpython:Lib/subprocess.py.
     proc = subprocess.Popen(
             cmd,
-            stdin=subprocess.DEVNULL if input is None else subprocess.PIPE,
+            stdin=stdin,
             stdout=subprocess.PIPE,
             stderr=_stderr,
     )
@@ -149,7 +164,7 @@ def run(input, output, fmt, *args, _check=True, _stderr=None):
         # This won't do for a full solution; but it's plenty for replacing
         # lots of shell scripts, where the data handled in pipes is not too
         # many kilobytes.
-        inbuf = input.read()
+        inbuf = input.read() if stdin == subprocess.PIPE else None
         outbuf, _ = proc.communicate(inbuf)
         output.write(outbuf)
 

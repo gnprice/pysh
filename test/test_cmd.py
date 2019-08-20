@@ -1,3 +1,5 @@
+import io
+import os
 import subprocess
 from typing import List
 
@@ -96,6 +98,16 @@ def test_run():
         | cmd.run('grep -m1 {}', 'yield')
         | cmd.run('perl -lane {}', 'print $F[0]')
     ) == b'91a20bf6b'
+
+
+def test_run_input_file():
+    readfd, writefd = os.pipe()
+    os.write(writefd, b'abc')
+    os.close(writefd)
+    buf = io.BytesIO()
+    with os.fdopen(readfd) as f:
+        cmd.run('perl -lpe print').thunk(f, buf)
+    assert bytes(buf.getbuffer()) == b'abc\nabc\n'
 
 
 def test_run_check():
