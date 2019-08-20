@@ -142,21 +142,24 @@ def run(input, output, fmt, *args, _check=True, _stderr=None):
     stdin = (subprocess.DEVNULL if input is None
              else input if has_fileno(input)
              else subprocess.PIPE)
+    stdout = (output if has_fileno(output)
+              else subprocess.PIPE)
 
     # Compare subprocess.run and Popen.communicate, in cpython:Lib/subprocess.py.
     proc = subprocess.Popen(
             cmd,
             stdin=stdin,
-            stdout=subprocess.PIPE,
+            stdout=stdout,
             stderr=_stderr,
     )
     if input is None:
         # Simplify in the case where no interleaved I/O is necessary.
         # This mirrors what Popen.communicate does, except with a `.read()`
         # expanded to pipeline chunks.
-        for chunk in chunks(proc.stdout):
-            output.write(chunk)
-        proc.stdout.close()
+        if stdout == subprocess.PIPE:
+            for chunk in chunks(proc.stdout):
+                output.write(chunk)
+            proc.stdout.close()
         proc.wait()
     else:
         # TODO this just exhausts our input, then starts passing it on.
@@ -166,7 +169,8 @@ def run(input, output, fmt, *args, _check=True, _stderr=None):
         # many kilobytes.
         inbuf = input.read() if stdin == subprocess.PIPE else None
         outbuf, _ = proc.communicate(inbuf)
-        output.write(outbuf)
+        if stdout == subprocess.PIPE:
+            output.write(outbuf)
 
     if _check:
         retcode = proc.returncode
