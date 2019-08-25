@@ -29,7 +29,7 @@ avoiding classic shell-script bugs.
     # -> ['rm', '-rf', '/tmp/1 .. 2']
 
     check_cmd('rm -rf {tmpdir}/{userdoc}', tmpdir='/tmp', userdoc='1 .. 2')
-    # removes `/tmp/1 .. 2`... not `/tmp/1`, `..`, and `2`
+    # removes `/tmp/1 .. 2` -- not `/tmp/1`, `..`, and `2`
 
 A format-minilanguage extension `{...!@}` substitutes in a whole list:
 
@@ -68,7 +68,7 @@ Or iterate through it:
         # ... gets last 10 commits touching `files`
 
 You can also write filters directly, using the `@pysh.filter`
-decorator.  See examples in the `example/` tree; this is also the same
+decorator.  See examples in the `example/` tree.  This is also the same
 API that all the filters in `pysh.cmd` are built on, so there are many
 examples there.
 
