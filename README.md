@@ -48,6 +48,11 @@ $ pytest -q
 [pytest]: https://docs.pytest.org/
 
 
+### Usage
+
+See detailed usage and examples in [`pysh/README.md`](pysh/README.md).
+
+
 ### Setup
 
 To run the tests, you'll need
