@@ -1,0 +1,8 @@
+# Rules that apply anywhere in the tree.
+# These have no slashes, except trailing slashes.
+*.egg-info/
+
+# Rules for a specific spot in the tree.
+# These have non-trailing slashes.
+/build/
+/dist/
