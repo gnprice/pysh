@@ -53,16 +53,15 @@ $ pytest -q
 See detailed usage and examples in [`pysh/README.md`](pysh/README.md).
 
 
-### Setup
+### Installing
 
-To run the tests, you'll need
-* Python 3.7+
-* `pytest`
-* `click`
-* (possibly something I've forgotten)
+The library is [`pysh-lib`](https://pypi.org/project/pysh-lib/) on
+PyPI.  You can install it with a command like:
+```
+$ pip install --user pysh-lib
+```
 
-You might use something like `pip3 install --user`, or set up a
-virtualenv.  Automating the latter would be nice; PRs welcome.
+Pysh requires Python 3.7+.
 
 
 ## Pysh, the design sketch of a new shell
