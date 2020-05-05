@@ -61,7 +61,7 @@ PyPI.  You can install it with a command like:
 $ pip install --user pysh-lib
 ```
 
-Pysh requires Python 3.7+.
+Pysh requires Python 3.6+.
 
 
 ## Pysh, the design sketch of a new shell

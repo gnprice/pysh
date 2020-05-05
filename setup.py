@@ -25,7 +25,7 @@ setup(
     },
     license="MIT",
     packages=["pysh"],
-    python_requires=">=3.7",
+    python_requires=">=3.6",
     install_requires=[
         "click>=7.0",
     ],
@@ -36,6 +36,7 @@ setup(
         "Intended Audience :: System Administrators",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3 :: Only",
+        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         # TODO test on 3.8, list here
         "Operating System :: Unix",
