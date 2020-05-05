@@ -20,10 +20,12 @@ class pysh:
 
 def chunks(f: io.BufferedReader):
     '''Generator for the contents of `f`, yielding once per underlying read.'''
-    chunk = f.read1()
+    # py36: Before Python 3.7, io.BufferedReader.read1 requires a size
+    #   argument.  Just pass explicitly the default from 3.7+.
+    chunk = f.read1(8192)
     while chunk:
         yield chunk
-        chunk = f.read1()
+        chunk = f.read1(8192)
 
 
 def chunks_text(f: io.TextIOBase):

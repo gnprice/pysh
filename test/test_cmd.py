@@ -60,7 +60,7 @@ def test_splitlines_chunks():
         def __init__(self, ss: List[str]) -> None:
             self.bs = [s.encode() for s in reversed(ss)]
 
-        def read1(self) -> bytes:
+        def read1(self, size: int = -1) -> bytes:
             if self.bs:
                 return self.bs.pop()
             return b''
