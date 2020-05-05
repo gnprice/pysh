@@ -38,7 +38,7 @@ setup(
         "Programming Language :: Python :: 3 :: Only",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
-        # TODO test on 3.8, list here
+        "Programming Language :: Python :: 3.8",
         "Operating System :: Unix",
         "Operating System :: POSIX",
         "Operating System :: POSIX :: Linux",
