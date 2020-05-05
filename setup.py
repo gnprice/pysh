@@ -11,7 +11,7 @@ long_description = open(THIS_DIR / "pysh" / "README.md").read()
 
 setup(
     name="pysh-lib",
-    version="0.0.1",
+    version="0.0.2",
     description="Pythonically simple alternative to shell scripts and subprocess",
     keywords="scripting shell subprocess cli",
     long_description=long_description,
