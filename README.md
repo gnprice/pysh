@@ -66,17 +66,17 @@ Pysh requires Python 3.6+.
 
 ## Pysh, the design sketch of a new shell
 
-Another thread of this work is in [`design.md`](design.md).  This is a
-speculative design sketch for an attempt to meet our challenge across
-its full range, including everyday interactive use:
+Another thread of this work is in [`doc/shell-design.md`](doc/shell-design.md).
+This is a speculative design sketch for an attempt to meet our
+challenge across its full range, including everyday interactive use:
 
 > Pysh is a new shell that scales smoothly from everyday interactive
 > commands as short as `ls` through 300-character "one-liners" as
 > conveniently as Bash, and up through many-KLoC programs with the
 > robustness of a modern programming language.
 
-See [`design.md`](design.md) for many more details on design and
-(hypothetical!) implementation.
+See [`doc/shell-design.md`](doc/shell-design.md) for many more details
+on design and (hypothetical!) implementation.
 
 The core of this hypothetical new shell is Python: it runs by
 transforming to Python bytecode, and its syntax for scripts is Python
@@ -88,7 +88,7 @@ The name "Pysh" stems from this vision.
 ## Trying it and contributing
 
 If this challenge sounds interesting or important to you, please try
-the `pysh` library, read the full-blown-shell [design doc](design.md),
+the `pysh` library, read the full-blown-shell [design doc](doc/shell-design.md),
 and send us your feedback!
 
 We're especially interested in hearing about your experience trying to
