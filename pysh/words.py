@@ -36,7 +36,7 @@ PAT_MARKUP = re.compile(
 
 def shwords(format_string, *args, **kwargs):
   '''
-  Split `format_string`, then format using `args` and `kwargs`, producing a list.
+  Split *format_string*, then format using *args* and *kwargs*, producing a list.
 
   Handy for producing the command line for invoking an external
   program, conveniently but without the complex gotchas of
@@ -45,9 +45,9 @@ def shwords(format_string, *args, **kwargs):
   >>> shwords('rm -rf /tmp/{userdoc}', userdoc='1 .. 2')
   ['rm', '-rf', '/tmp/1 .. 2']
 
-  The `format_string` is split on spaces.  Each word is then formatted
+  The *format_string* is split on spaces.  Each word is then formatted
   through a minilanguage similar to :meth:`str.format`.  Each word of
-  `format_string` produces exactly one item in the result (unless
+  *format_string* produces exactly one item in the result (unless
   explicitly instructed otherwise with ``{!@}``), regardless of the
   contents of the interpolated values.
 
@@ -55,7 +55,7 @@ def shwords(format_string, *args, **kwargs):
   except:
 
   * An additional conversion ``!@``, as in ``{!@}``.  This must appear in
-    `format_string` as a whole word.  The argument must be an iterable,
+    *format_string* as a whole word.  The argument must be an iterable,
     and each element of the iterable becomes an element in the result.
 
   * The conversions ``!r`` and ``!a`` are omitted, because they only make

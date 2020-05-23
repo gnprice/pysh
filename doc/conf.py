@@ -32,6 +32,8 @@ extensions = [
     'sphinx.ext.intersphinx',
 ]
 
+default_role = 'py:obj'
+
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3/', None),
 }
