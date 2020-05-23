@@ -38,12 +38,14 @@ from typing import Optional
 from .words import caller_namespace, shwords
 
 
-# Has the same meaning for stdout/stderr arguments of these
-# functions, and of cmd.run, as for subprocess.Popen.
+# NOTE: This doesn't get autodoc'd -- text is duplicated in doc/.
+#: Has the same meaning for *stdout*/*stderr* arguments of these
+#: functions, and of `.cmd.run`, as for :class:`subprocess.Popen`.
 DEVNULL = subprocess.DEVNULL
 
-# Has the same meaning for stderr arguments of these functions,
-# and of cmd.run, as for subprocess.Popen.
+# NOTE: This doesn't get autodoc'd -- text is duplicated in doc/.
+#: Has the same meaning for *stderr* arguments of these functions,
+#: and of `.cmd.run`, as for :class:`subprocess.Popen`.
 STDOUT = subprocess.STDOUT
 
 # Would be easy to add this if useful, but I don't see a case

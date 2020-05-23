@@ -14,6 +14,9 @@ Welcome to Pysh's documentation!
 .. TODO: fix up CSS where <ul> appears inside a function's <dd>, as
    for pysh.shwords.
 
+.. TODO: find a way to autodoc pysh.DEVNULL etc.  Closest ways I've
+   found result in showing the name like `pysh.subprocess.DEVNULL`.
+
 
 Preparing command lines
 -----------------------
@@ -27,6 +30,16 @@ Running commands
 ----------------
 
 .. automodule:: pysh.subprocess
+
+.. py:data:: pysh.DEVNULL
+
+   Has the same meaning for *stdout*/*stderr* arguments of these
+   functions, and of `.cmd.run`, as for :class:`subprocess.Popen`.
+
+.. py:data:: pysh.STDOUT
+
+   Has the same meaning for *stderr* arguments of these functions,
+   and of `.cmd.run`, as for :class:`subprocess.Popen`.
 
 .. autofunction:: pysh.check_cmd
 .. autofunction:: pysh.check_cmd_f
