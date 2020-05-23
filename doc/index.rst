@@ -10,6 +10,10 @@ Welcome to Pysh's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+.. TODO: fix up CSS where <ul> appears inside a function's <dd>, as
+   for pysh.shwords.
+
+.. autofunction:: pysh.shwords
 
 
 Indices and tables
