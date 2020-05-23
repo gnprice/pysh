@@ -37,15 +37,17 @@ Pysh supports Python 3.6+.
 
 Simple commands are simple:
 
-    from pysh import check_cmd, try_cmd
+```python3
+from pysh import check_cmd, try_cmd
 
-    check_cmd('gpg --decrypt --output {} {}', cleartext_path, cryptotext_path)
+check_cmd('gpg --decrypt --output {} {}', cleartext_path, cryptotext_path)
 
-    if not try_cmd('git diff-index --quiet HEAD'):
-        raise RuntimeError("worktree not clean")
+if not try_cmd('git diff-index --quiet HEAD'):
+    raise RuntimeError("worktree not clean")
 
-    repo_root = slurp_cmd('git rev-parse --show-toplevel')
-    # "slurp" strips trailing newlines, just like shell `$(...)`
+repo_root = slurp_cmd('git rev-parse --show-toplevel')
+# "slurp" strips trailing newlines, just like shell `$(...)`
+```
 
 ### Writing command lines
 
@@ -55,28 +57,34 @@ command's list of arguments, providing shell-script-like
 convenience...  but the interpolated data never affects the split,
 avoiding classic shell-script bugs.
 
-    from pysh import shwords, check_cmd
+```python3
+from pysh import shwords, check_cmd
 
-    shwords('rm -rf {tmpdir}/{userdoc}', tmpdir='/tmp', userdoc='1 .. 2')
-    # -> ['rm', '-rf', '/tmp/1 .. 2']
+shwords('rm -rf {tmpdir}/{userdoc}', tmpdir='/tmp', userdoc='1 .. 2')
+# -> ['rm', '-rf', '/tmp/1 .. 2']
 
-    check_cmd('rm -rf {tmpdir}/{userdoc}', tmpdir='/tmp', userdoc='1 .. 2')
-    # removes `/tmp/1 .. 2` -- not `/tmp/1`, `..`, and `2`
+check_cmd('rm -rf {tmpdir}/{userdoc}', tmpdir='/tmp', userdoc='1 .. 2')
+# removes `/tmp/1 .. 2` -- not `/tmp/1`, `..`, and `2`
+```
 
 A format-minilanguage extension `{...!@}` substitutes in a whole list:
 
-    check_cmd('grep -C2 TODO -- {!@}', files)
+```python3
+check_cmd('grep -C2 TODO -- {!@}', files)
+```
 
 Each function taking a command line also has a twin, named with `_f`,
 that opts into f-string-like behavior:
 
-    from pysh import check_cmd, check_cmd_f
+```python3
+from pysh import check_cmd, check_cmd_f
 
-    check_cmd_f('{compiler} {cflags!@} -c {source_file} -o {object_file}')
+check_cmd_f('{compiler} {cflags!@} -c {source_file} -o {object_file}')
 
-    # equivalent to:
-    check_cmd('{} {!@} -c {} -o {}',
-              compiler, cflags, source_file, object_file)
+# equivalent to:
+check_cmd('{} {!@} -c {} -o {}',
+          compiler, cflags, source_file, object_file)
+```
 
 ### Pipelines
 
@@ -86,18 +94,22 @@ Pipelines are composed with the `|` operator.  Each stage (or
 Most often pipelines are built from the filters offered in the
 `pysh.cmd` module.  You can consume the output with `pysh.slurp`:
 
-    import pysh
-    from pysh import cmd
+```python3
+import pysh
+from pysh import cmd
 
-    hello = pysh.slurp(cmd.echo(b'hello world')
-                       | cmd.run('tr h H'))
-    # -> b'Hello world'
+hello = pysh.slurp(cmd.echo(b'hello world')
+                   | cmd.run('tr h H'))
+# -> b'Hello world'
+```
 
 Or iterate through it:
 
-    for commit_id in (cmd.run('git rev-list -n10 -- {!@}', files)
-                      | cmd.splitlines()):
-        # ... gets last 10 commits touching `files`
+```python3
+for commit_id in (cmd.run('git rev-list -n10 -- {!@}', files)
+                  | cmd.splitlines()):
+    # ... gets last 10 commits touching `files`
+```
 
 You can also write filters directly, using the `@pysh.filter`
 decorator.  See examples in the `example/` tree.  This is also the same
