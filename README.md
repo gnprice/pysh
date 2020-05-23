@@ -122,14 +122,15 @@ examples there.
 For some small demos, on real scripts originally written in Bash, see
 the [`example/`](./example/) directory.
 
-The implementation, in `pysh/`, also contains many small examples in
-the form of unit tests.  To run the unit tests (as well as tests of
-the `example/` demos), simply run [pytest]:
+For a number of smaller examples, see the unit tests in [`test/`](./test/).
+
+To run the test suite, simply run [pytest]:
 ```
 $ pytest -q
-............                                                             [100%]
-12 passed in 0.39 seconds
+.....................                                                 [100%]
+21 passed in 0.67 seconds
 ```
+This includes tests of the `example/` demos, as well as the unit tests.
 
 [pytest]: https://docs.pytest.org/
 
