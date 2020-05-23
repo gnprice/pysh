@@ -1,7 +1,9 @@
 # Pysh
 
-This repo contains exploratory work motivated by the following
-challenge:
+Pysh is a library for running external commands from a Python program,
+with the usual concision and clarity that Python achieves in other domains.
+
+The problem Pysh aims to solve is:
 
 * Python is in general excellent for writing code that cleanly says
   what one means to say, without a bunch of excess ceremony or
@@ -10,31 +12,103 @@ challenge:
 * Yet when it comes to invoking external programs, passing
   command-line arguments, and consuming their output or wiring them up
   in pipelines, the usual Python code for it feels verbose and complex
-  compared to a shell script... let alone a "one-liner" one might type
-  at an interactive shell prompt.
+  compared to a shell script.
 
-  As a result, even in 2019 many of us continue to routinely write
-  those one-liners, as well as longer shell scripts.
+  As a result, even in 2020 many of us continue to routinely write
+  shell scripts.
 
-* Can we get the concision and power of the shell, in its domain --
-  while keeping all the clarity and robustness that's possible to
-  achieve in a modern programming language like Python?
+* Pysh seeks to match the concision and power of the shell, in its
+  domain -- while keeping all the clarity and robustness that's
+  possible to achieve in a modern programming language like Python.
 
 
-## `pysh`, the Python library
+## Installing
 
-One thread of this work is an experimental -- but working! --
-Python library that aims to meet our challenge for pure Python
-scripts, as far as that's possible.
+The library is [`pysh-lib`](https://pypi.org/project/pysh-lib/) on
+PyPI.  You can install it with a command like:
+```
+$ pip install --user pysh-lib
+```
 
-Most of the ideas needed for this, and even most of the code, will
-also be required for a full-blown Pysh shell like the design discussed
-below; so this also serves as a way to experiment on that design.
+Pysh supports Python 3.6+.
 
-The `pysh` library works today, though there are further features that
-would be useful and interesting to add.  For some small demos, on real
-scripts originally written in Bash, see the [`example/`](example/)
-directory.
+
+## Usage
+
+Simple commands are simple:
+
+    from pysh import check_cmd, try_cmd
+
+    check_cmd('gpg --decrypt --output {} {}', cleartext_path, cryptotext_path)
+
+    if not try_cmd('git diff-index --quiet HEAD'):
+        raise RuntimeError("worktree not clean")
+
+    repo_root = slurp_cmd('git rev-parse --show-toplevel')
+    # "slurp" strips trailing newlines, just like shell `$(...)`
+
+### Writing command lines
+
+Command lines offer a `format`-like minilanguage, powered by
+`pysh.shwords`.  The format string is automatically split to form the
+command's list of arguments, providing shell-script-like
+convenience...  but the interpolated data never affects the split,
+avoiding classic shell-script bugs.
+
+    from pysh import shwords, check_cmd
+
+    shwords('rm -rf {tmpdir}/{userdoc}', tmpdir='/tmp', userdoc='1 .. 2')
+    # -> ['rm', '-rf', '/tmp/1 .. 2']
+
+    check_cmd('rm -rf {tmpdir}/{userdoc}', tmpdir='/tmp', userdoc='1 .. 2')
+    # removes `/tmp/1 .. 2` -- not `/tmp/1`, `..`, and `2`
+
+A format-minilanguage extension `{...!@}` substitutes in a whole list:
+
+    check_cmd('grep -C2 TODO -- {!@}', files)
+
+Each function taking a command line also has a twin, named with `_f`,
+that opts into f-string-like behavior:
+
+    from pysh import check_cmd, check_cmd_f
+
+    check_cmd_f('{compiler} {cflags!@} -c {source_file} -o {object_file}')
+
+    # equivalent to:
+    check_cmd('{} {!@} -c {} -o {}',
+              compiler, cflags, source_file, object_file)
+
+### Pipelines
+
+Pipelines are composed with the `|` operator.  Each stage (or
+"filter") in the pipeline can be an external command, or Python code.
+
+Most often pipelines are built from the filters offered in the
+`pysh.cmd` module.  You can consume the output with `pysh.slurp`:
+
+    import pysh
+    from pysh import cmd
+
+    hello = pysh.slurp(cmd.echo(b'hello world')
+                       | cmd.run('tr h H'))
+    # -> b'Hello world'
+
+Or iterate through it:
+
+    for commit_id in (cmd.run('git rev-list -n10 -- {!@}', files)
+                      | cmd.splitlines()):
+        # ... gets last 10 commits touching `files`
+
+You can also write filters directly, using the `@pysh.filter`
+decorator.  See examples in the `example/` tree.  This is also the same
+API that all the filters in `pysh.cmd` are built on, so there are many
+examples there.
+
+
+## Examples
+
+For some small demos, on real scripts originally written in Bash, see
+the [`example/`](example/) directory.
 
 The implementation, in `pysh/`, also contains many small examples in
 the form of unit tests.  To run the unit tests (as well as tests of
@@ -48,27 +122,18 @@ $ pytest -q
 [pytest]: https://docs.pytest.org/
 
 
-### Usage
+## Further ambitions: Pysh, a new shell
 
-See detailed usage and examples in [`pysh/README.md`](pysh/README.md).
+Pysh works great today for writing full scripts.  One strength of the
+shell which Pysh does not currently match is that it can be the same
+language you use for everyday interactive commands -- which means you
+can build up a script from commands you run at the interactive prompt,
+and conversely you can take fragments of a script and more or less
+copy-paste them to your shell prompt to run them ad hoc.
 
-
-### Installing
-
-The library is [`pysh-lib`](https://pypi.org/project/pysh-lib/) on
-PyPI.  You can install it with a command like:
-```
-$ pip install --user pysh-lib
-```
-
-Pysh requires Python 3.6+.
-
-
-## Pysh, the design sketch of a new shell
-
-Another thread of this work is in [`doc/shell-design.md`](doc/shell-design.md).
-This is a speculative design sketch for an attempt to meet our
-challenge across its full range, including everyday interactive use:
+In the future we hope to extend Pysh to provide an interactive shell
+too.  A design sketch for this can be found in
+[`doc/shell-design.md`](doc/shell-design.md):
 
 > Pysh is a new shell that scales smoothly from everyday interactive
 > commands as short as `ls` through 300-character "one-liners" as
@@ -84,8 +149,11 @@ with certain extensions.
 
 The name "Pysh" stems from this vision.
 
+In any case Pysh will always support being used as a pure Python
+library, as it does today.
 
-## Trying it and contributing
+
+## Contributing
 
 If this challenge sounds interesting or important to you, please try
 the `pysh` library, read the full-blown-shell [design doc](doc/shell-design.md),

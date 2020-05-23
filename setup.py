@@ -7,7 +7,7 @@ from setuptools import setup
 
 THIS_DIR = Path(__file__).parent
 
-long_description = open(THIS_DIR / "pysh" / "README.md").read()
+long_description = open(THIS_DIR / "README.md").read()
 
 setup(
     name="pysh-lib",
