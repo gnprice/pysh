@@ -6,3 +6,4 @@
 # These have non-trailing slashes.
 /build/
 /dist/
+/doc/_build/
