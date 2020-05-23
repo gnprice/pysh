@@ -11,6 +11,11 @@ Welcome to Pysh's documentation!
    :caption: Contents:
 
 
+.. TODO:
+   * Document remaining API: filters, cmd.
+   * Publish docs!  And link from README.
+   * Add some commentary and/or examples, and/or link back to README etc.
+
 .. TODO: fix up CSS where <ul> appears inside a function's <dd>, as
    for pysh.shwords.
 
