@@ -108,7 +108,7 @@ examples there.
 ## Examples
 
 For some small demos, on real scripts originally written in Bash, see
-the [`example/`](example/) directory.
+the [`example/`](./example/) directory.
 
 The implementation, in `pysh/`, also contains many small examples in
 the form of unit tests.  To run the unit tests (as well as tests of
@@ -133,14 +133,14 @@ copy-paste them to your shell prompt to run them ad hoc.
 
 In the future we hope to extend Pysh to provide an interactive shell
 too.  A design sketch for this can be found in
-[`doc/shell-design.md`](doc/shell-design.md):
+[`doc/shell-design.md`](./doc/shell-design.md):
 
 > Pysh is a new shell that scales smoothly from everyday interactive
 > commands as short as `ls` through 300-character "one-liners" as
 > conveniently as Bash, and up through many-KLoC programs with the
 > robustness of a modern programming language.
 
-See [`doc/shell-design.md`](doc/shell-design.md) for many more details
+See [`doc/shell-design.md`](./doc/shell-design.md) for many more details
 on design and (hypothetical!) implementation.
 
 The core of this hypothetical new shell is Python: it runs by
@@ -156,12 +156,12 @@ library, as it does today.
 ## Contributing
 
 If this challenge sounds interesting or important to you, please try
-the `pysh` library, read the full-blown-shell [design doc](doc/shell-design.md),
+the `pysh` library, read the full-blown-shell [design doc](./doc/shell-design.md),
 and send us your feedback!
 
 We're especially interested in hearing about your experience trying to
 use `pysh` in scripts.  Take a look at the demo scripts in
-[`example/`](example/); then look at some script of your own, or an
+[`example/`](./example/); then look at some script of your own, or an
 interesting small piece of one, and try converting it to use `pysh`.
 * How does it compare to the original?
 * What patterns are awkward to express in `pysh`?

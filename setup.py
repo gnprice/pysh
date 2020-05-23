@@ -4,10 +4,18 @@ from setuptools import setup
 # TODO: auto-version; test_suite; keywords;
 #       get LICENSE file into sdist (it's in wheel already);
 #       more long_description? in rST?
+#       in README point to fixed version, rather than master
 
 THIS_DIR = Path(__file__).parent
 
-long_description = open(THIS_DIR / "README.md").read()
+REPO_URL = "https://github.com/gnprice/pysh"
+
+def make_readme():
+    raw = open(THIS_DIR / "README.md").read()
+    # Make relative URLs absolute, pointing at the repo.
+    return raw.replace("](./", f"]({REPO_URL}/blob/master/")
+
+long_description = make_readme()
 
 setup(
     name="pysh-lib",
