@@ -146,7 +146,7 @@ def caller_namespace(caller_depth=2):
 
   By default, applies to the caller's caller; so another function can
   call this one to get at its own caller's locals.  In general, applies
-  to the frame `caller_depth` many calls below itself.
+  to the frame *caller_depth* many calls below itself.
 
   By specification this function is quite magical, and makes its
   caller quite magical.  Use responsibly.
@@ -157,7 +157,8 @@ def caller_namespace(caller_depth=2):
 
 def shwords_f(format_string):
   '''
-  Process (almost) like an f-string, but with splitting like `shwords`.
+  Process (almost) like an :ref:`f-string <python:f-strings>`,
+  but with splitting like `.shwords()`.
 
   NB unlike an f-string, only the caller's locals are available;
   not globals, and enclosing scopes are complicated.

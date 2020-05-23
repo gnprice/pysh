@@ -1,28 +1,29 @@
 '''
-Thin wrappers around `subprocess`, mainly adding `shwords`.
+These provide thin wrappers around `subprocess`, mainly adding `.shwords()`.
 
-The basic `check_cmd` is a small convenience helper, just composing
-`shwords` with `subprocess.check_call`.
+The basic `.check_cmd()` is a small convenience helper, just composing
+`.shwords()` with :func:`subprocess.check_call`.
 
-Similarly, `check_cmd_f` behaves like `shwords_f` composed with
-`subprocess.check_call`: it processes the command format-string much
-like an f-string.
+Similarly, `.check_cmd_f()` behaves like `.shwords_f()` composed with
+:func:`subprocess.check_call`: it processes the command format-string
+much like an :ref:`f-string <python:f-strings>`.
 
-The `try_cmd` variant provides more appropriate semantics when the
-command's failure is an expected condition, by returning a `bool`
-for success/failure rather than raising an exception on failure.
-Similarly `try_cmd_f`.
+The `.try_cmd()` variant provides more appropriate semantics when the
+command's failure is an expected condition, by returning a `bool` for
+success/failure rather than raising an exception on failure.
+Similarly `.try_cmd_f()`.
 
-The `slurp_cmd` function and the rest of its family run a command
-for its output, with `subprocess.check_output`, and strip trailing
-newlines.  This matches the behavior of `$(...)` in Bash and fits
-nicely with conventional semantics for Unix CLI tools.
+The `.slurp_cmd()` function and the rest of its family run a command
+for its output, with :func:`subprocess.check_output`, and strip
+trailing newlines.  This matches the behavior of ``$(...)`` in Bash
+and fits nicely with conventional semantics for Unix CLI tools.
 
-The behavior of `slurp_cmd_f`, `try_slurp_cmd`, and
-`try_slurp_cmd_f` relate to `slurp_cmd` in the same way as
-`check_cmd_f`, `try_cmd`, and `try_cmd_f` do to `check_cmd`.
+The behavior of `.slurp_cmd_f()`, `.try_slurp_cmd()`, and
+`.try_slurp_cmd_f()` relate to `.slurp_cmd()` in the same way as
+`.check_cmd_f()`, `.try_cmd()`, and `.try_cmd_f()` do to
+`.check_cmd()`.
 
-In short, these functions fill the following table:
+In short, these functions fill the following table::
 
     check_cmd      try_cmd
     check_cmd_f    try_cmd_f
@@ -61,10 +62,10 @@ def check_cmd(fmt, *args,
               _cwd=None, _timeout=None,
               **kwargs) -> None:
     '''
-    Just like `subprocess.check_call`, but with `shwords`.
+    Just like :func:`subprocess.check_call`, but with `.shwords()`.
 
-    The named keyword arguments are passed through, with `stdin=_stdin` etc.
-    All other arguments are passed to `shwords`.
+    The named keyword arguments are passed through, with ``stdin=_stdin`` etc.
+    All other arguments are passed to `.shwords()`.
     '''
     subprocess.check_call(
         shwords(fmt, *args, **kwargs),
@@ -78,13 +79,14 @@ def check_cmd(fmt, *args,
 
 def check_cmd_f(fmt, **kwargs) -> None:
     '''
-    Just like `check_cmd`, but with `shwords_f` instead of `shwords`.
+    Just like `.check_cmd()`, but with `.shwords_f()` instead of `.shwords()`.
 
-    This means `fmt` is processed much like an f-string, with access
-    to the caller's locals.  See `shwords_f` for details.
+    This means *fmt* is processed much like an
+    :ref:`f-string <python:f-strings>`, with access to the caller's
+    locals.  See `.shwords_f()` for details.
 
-    Also, unlike `check_cmd` all keyword arguments are passed straight
-    through to `subprocess.check_call`.
+    Also, unlike `.check_cmd()` all keyword arguments are passed
+    straight through to :func:`subprocess.check_call`.
     '''
     subprocess.check_call(
         shwords(fmt, **caller_namespace()),
@@ -94,7 +96,7 @@ def check_cmd_f(fmt, **kwargs) -> None:
 
 def try_cmd(fmt, *args, **kwargs) -> bool:
     '''
-    Just like `check_cmd`, but returns success/failure rather than raise.
+    Just like `.check_cmd()`, but returns success/failure rather than raise.
     '''
     try:
         check_cmd(fmt, *args, **kwargs)
@@ -105,7 +107,7 @@ def try_cmd(fmt, *args, **kwargs) -> bool:
 
 def try_cmd_f(fmt, **kwargs) -> bool:
     '''
-    Just like `check_cmd_f`, but returns success/failure rather than raise.
+    Just like `.check_cmd_f()`, but returns success/failure rather than raise.
     '''
     try:
         subprocess.check_call(
@@ -124,10 +126,10 @@ def slurp_cmd(fmt, *args,
     '''
     Run the command and capture output, stripping any trailing newlines.
 
-    Stripping trailing newlines is the same behavior as `$(...)` has
+    Stripping trailing newlines is the same behavior as ``$(...)`` has
     in Bash.  It fits nicely with conventional semantics for Unix CLI tools.
 
-    See also `pysh.filters.slurp`.
+    See also `pysh.filters.slurp()`.
     '''
     # For reference on `$(...)` see Bash manual, 3.5.4 Command Substitution.
     raw_output = subprocess.check_output(
@@ -142,10 +144,11 @@ def slurp_cmd(fmt, *args,
 
 def slurp_cmd_f(fmt, **kwargs) -> str:
     '''
-    Just like `slurp_cmd`, but with `shwords_f` instead of `shwords`.
+    Just like `.slurp_cmd()`, but with `.shwords_f()` instead of `.shwords()`.
 
-    Also, like `check_cmd_f` in contrast to `check_cmd`, all keyword
-    arguments are passed straight through to `subprocess.check_output`.
+    Also, like `.check_cmd_f()` in contrast to `.check_cmd()`, all
+    keyword arguments are passed straight through to
+    :func:`subprocess.check_output`.
     '''
     raw_output = subprocess.check_output(
         shwords(fmt, **caller_namespace()),
@@ -156,7 +159,7 @@ def slurp_cmd_f(fmt, **kwargs) -> str:
 
 def try_slurp_cmd(fmt, *args, **kwargs) -> Optional[str]:
     '''
-    Just like `slurp_cmd`, but on failure returns None rather than raise.
+    Just like `.slurp_cmd()`, but on failure returns `None` rather than raise.
     '''
     try:
         return slurp_cmd(fmt, *args, **kwargs)
@@ -166,7 +169,7 @@ def try_slurp_cmd(fmt, *args, **kwargs) -> Optional[str]:
 
 def try_slurp_cmd_f(fmt, **kwargs) -> Optional[str]:
     '''
-    Just like `slurp_cmd_f`, but on failure returns None rather than raise.
+    Just like `.slurp_cmd_f()`, but on failure returns `None` rather than raise.
     '''
     try:
         raw_output = subprocess.check_output(
