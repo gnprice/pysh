@@ -33,16 +33,19 @@ $ pip install --user pysh-lib
 Pysh supports Python 3.6+.
 
 
-## Usage
+## Using
 
-Simple commands are simple:
+### Simple commands are simple
 
 ```python3
 from pysh import check_cmd, try_cmd
 
 check_cmd('gpg --decrypt --output {} {}', cleartext_path, cryptotext_path)
+# format string gets split on whitespace; arguments don't
+# check_cmd raises if command fails
 
 if not try_cmd('git diff-index --quiet HEAD'):
+    # "try" means return success/failure, don't raise
     raise RuntimeError("worktree not clean")
 
 repo_root = slurp_cmd('git rev-parse --show-toplevel')
