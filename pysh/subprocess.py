@@ -131,7 +131,7 @@ def slurp_cmd(fmt, *args,
     Stripping trailing newlines is the same behavior as ``$(...)`` has
     in Bash.  It fits nicely with conventional semantics for Unix CLI tools.
 
-    See also `pysh.filters.slurp()`.
+    See also `pysh.slurp()`.
     '''
     # For reference on `$(...)` see Bash manual, 3.5.4 Command Substitution.
     raw_output = subprocess.check_output(

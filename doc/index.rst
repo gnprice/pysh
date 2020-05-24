@@ -57,6 +57,16 @@ Running commands
 .. autofunction:: pysh.try_slurp_cmd_f
 
 
+Running pipelines
+-----------------
+
+.. TODO these need examples
+
+.. autofunction:: pysh.slurp
+.. autofunction:: pysh.to_stdout
+
+
+
 Indices and tables
 ==================
 

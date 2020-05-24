@@ -101,10 +101,10 @@ def slurp(filter):
     '''
     Run the pipeline and capture output, stripping any trailing newlines.
 
-    Stripping trailing newlines is the same behavior as `$(...)` has
+    Stripping trailing newlines is the same behavior as ``$(...)`` has
     in Bash.  It fits nicely with conventional semantics for Unix CLI tools.
 
-    See also `pysh.subprocess.slurp_cmd`.
+    See also `pysh.slurp_cmd`.
     '''
     # For reference on `$(...)` see Bash manual, 3.5.4 Command Substitution.
     return (filter | slurp_filter)()
