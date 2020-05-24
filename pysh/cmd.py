@@ -137,6 +137,34 @@ def has_fileno(f: io.IOBase) -> bool:
 @pysh.argument()
 @pysh.argument(n='*')
 def run(input, output, fmt, *args, _check=True, _stderr=None):
+    '''
+    Run the given external command, as a pipeline filter.
+
+    Like any filter, the return value of ``cmd.run()`` only has an
+    effect when a pipeline containing it is run by a function like
+    `.slurp()` or `.to_stdout()`.  When run:
+
+    * The given *fmt* and *\*args* are interpreted by `.shwords()` to
+      produce a command line.
+
+    * The command line is executed (using :class:`subprocess.Popen`),
+      with stdin and stdout connected to the filter's input and output
+      in the pipeline.  Input is optional.
+
+    * The external command's stderr can be controlled with *_stderr*,
+      using values `None`, :data:`pysh.DEVNULL`, or `pysh.STDOUT`.
+
+    * If *_check* is true (the default), an exception is raised on
+      failure just like `.check_cmd()`.  Otherwise, the
+      external command's return code is ignored.
+
+    **NOTE**: In the current implementation, the input may be read
+    completely into a buffer before any of it is passed to the
+    external command.  This is just fine for lots of scripts, but will
+    be fixed before Pysh 1.0.  If you have a use case where this
+    matters, please file an issue, to help prioritize fixing it.
+    '''
+
     cmd = shwords(fmt, *args)
 
     assert input is None or isinstance(input, io.IOBase)

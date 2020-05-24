@@ -36,13 +36,14 @@ Running commands
 ----------------
 
 .. automodule:: pysh.subprocess
+.. currentmodule:: pysh
 
-.. py:data:: pysh.DEVNULL
+.. py:data:: DEVNULL
 
    Has the same meaning for *stdout*/*stderr* arguments of these
    functions, and of `.cmd.run`, as for :class:`subprocess.Popen`.
 
-.. py:data:: pysh.STDOUT
+.. py:data:: STDOUT
 
    Has the same meaning for *stderr* arguments of these functions,
    and of `.cmd.run`, as for :class:`subprocess.Popen`.
@@ -69,7 +70,9 @@ Running pipelines
 Commands in pipelines
 ---------------------
 
-.. TODO document pysh.cmd.run echo cat devnull encode decode
+.. TODO document pysh.cmd.echo cat devnull encode decode
+
+.. autofunction:: pysh.cmd.run
 
 .. autofunction:: pysh.cmd.splitlines
 
