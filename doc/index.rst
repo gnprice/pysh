@@ -17,7 +17,8 @@ Welcome to Pysh's documentation!
    * Add some commentary and/or examples, and/or link back to README etc.
 
 .. TODO: fix up CSS where <ul> appears inside a function's <dd>, as
-   for pysh.shwords.
+   for pysh.shwords.  (It's fine in the wide case; it's when the
+   viewport gets narrow, and the left nav disappears, that it goes wrong.)
 
 .. TODO: find a way to autodoc pysh.DEVNULL etc.  Closest ways I've
    found result in showing the name like `pysh.subprocess.DEVNULL`.
