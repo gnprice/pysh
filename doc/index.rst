@@ -69,8 +69,13 @@ Running pipelines
 Commands in pipelines
 ---------------------
 
+.. TODO document pysh.cmd.run echo cat devnull encode decode
+
 .. autofunction:: pysh.cmd.splitlines
 
+
+.. TODO section: Writing new filters
+   pysh.filter input output argument option
 
 
 
