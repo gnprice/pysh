@@ -143,6 +143,14 @@ class Function:
         self.output = getattr(func, 'output', IoSpec())
         self.argspecs = getattr(func, 'argspecs', [])
 
+    @property  # TODO(py38+): use functools.cached_property
+    def __signature__(self):
+        import inspect
+        inner = inspect.Signature.from_callable(self.func)
+        num_drop = (self.input.type != 'none') + (self.output.type != 'none')
+        parameters = list(inner.parameters.values())[num_drop:]
+        return inner.replace(parameters=parameters)
+
     def __call__(self, *args, **kwargs):
         pass_input = Filter.pass_input(self.input)
         pass_output = Filter.pass_output(self.output)
