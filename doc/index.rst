@@ -66,6 +66,13 @@ Running pipelines
 .. autofunction:: pysh.to_stdout
 
 
+Commands in pipelines
+---------------------
+
+.. autofunction:: pysh.cmd.splitlines
+
+
+
 
 Indices and tables
 ==================

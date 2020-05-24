@@ -138,6 +138,7 @@ class Function:
 
     def __init__(self, func):
         self.func = func
+        self.__doc__ = func.__doc__
         self.input = getattr(func, 'input', IoSpec())
         self.output = getattr(func, 'output', IoSpec())
         self.argspecs = getattr(func, 'argspecs', [])

@@ -96,13 +96,14 @@ def splitlines(input):
     Split the input stream into an iterator of lines.
 
     The meaning of "line" follows the standard Unix convention:
-     * Each newline character (b'\n') terminates a line.
-     * If there are any characters after the last newline, they
-       form one last line.
 
-    This is also the same behavior as Python's `bytes.splitlines()`,
-    except that only b'\n' counts as a newline: b'\r' is treated the
-    same as any other byte.
+    * Each newline byte (``b'\\n'``) terminates a line.
+    * If there are any bytes after the last newline, they
+      form one last line.
+
+    This is also the same behavior as Python's :meth:`bytes.splitlines`,
+    except that only ``b'\\n'`` counts as a newline: ``b'\\r'`` is
+    treated the same as any other byte.
     '''
     # Future feature: options like delim=b'\0'
     delimiter = b'\n'
