@@ -12,7 +12,7 @@ Welcome to Pysh's documentation!
 
 
 .. TODO:
-   * Document remaining API: filters, cmd.
+   * Document remaining API (specifics below.)
    * Publish docs!  And link from README.
    * Add some commentary and/or examples, and/or link back to README etc.
 
@@ -70,12 +70,14 @@ Running pipelines
 Commands in pipelines
 ---------------------
 
-.. TODO document pysh.cmd.echo cat devnull encode decode
+.. TODO document pysh.cmd.encode decode
 
 .. autofunction:: pysh.cmd.run
 
 .. autofunction:: pysh.cmd.splitlines
-
+.. autofunction:: pysh.cmd.cat
+.. autofunction:: pysh.cmd.echo
+.. autofunction:: pysh.cmd.devnull
 
 .. TODO section: Writing new filters
    pysh.filter input output argument option

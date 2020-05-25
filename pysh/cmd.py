@@ -41,6 +41,17 @@ def chunks_text(f: io.TextIOBase):
 @pysh.input(type='stream', required=False)
 @pysh.output(type='stream', required=False)
 def devnull(input, output):
+    '''
+    Ignore any input, and provide nothing as output.
+
+    This corresponds to a shell redirection from or to ``/dev/null``.
+    In particular:
+
+    * a shell command like ``… </dev/null`` corresponds to a Pysh
+      pipeline ``cmd.devnull() | …``;
+    * a shell command like ``… >/dev/null`` corresponds to a Pysh
+      pipeline ``… | cmd.devnull()``.
+    '''
     if output is not None:
         output.close()
 
@@ -55,6 +66,20 @@ def devnull(input, output):
 @pysh.argument(n='*', type=bytes)
 @pysh.option(' /-n', type=bool)
 def echo(output, *words, ln=True):
+    '''
+    Write the given *words* to the output.
+
+    The words are separated by blanks ``b' '``.  If *ln* is true (the
+    default), a newline ``b'\\n'`` follows at the end.
+
+    This corresponds to the Unix command ``echo``, with ``ln=False``
+    corresponding to ``echo -n``.
+
+    For example:
+
+    >>> pysh.to_stdout( cmd.echo(b'hello', b'world') )
+    hello world
+    '''
     output.write(b' '.join(words)
                  + (b'\n' if ln else b''))
 
@@ -64,6 +89,18 @@ def echo(output, *words, ln=True):
 @pysh.output(type='stream')
 @pysh.argument(n='*', type='filename')
 def cat(output, *filenames):
+    '''
+    Read each of the given files in turn, and output their contents.
+
+    This is very similar to the Unix command ``cat``, but with fewer
+    features:
+
+    * The filenames are never interpreted as options; they're simply
+      filenames.
+    * The filename ``-``, or an empty list of filenames, are not
+      special; instead of reading from stdin, they cause reading from
+      a file named ``-``, and an empty output, respectively.
+    '''
     for filename in filenames:
         with open(filename, 'rb') as f:
             for chunk in chunks(f):
